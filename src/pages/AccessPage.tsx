@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { authService } from "@/services/authService";
-import logoRR from "@/assets/logo_rr.webp";
+import logoRR from "@/assets/logoRR.png";
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
@@ -278,26 +278,28 @@ export default function AccessPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-6">
-          <div className="mb-4 flex justify-center overflow-hidden">
+    <div className="flex min-h-dvh justify-center bg-slate-100 px-4 py-3">
+      <div className="flex min-h-[calc(100dvh-1.5rem)] w-full max-w-md flex-col rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+
+        <div className="mb-5 sm:mb-6">
+          <div className="mb-3 flex justify-center overflow-hidden">
             <img
               src={logoRR}
               alt="Royal Riders"
-              className="h-[429px] object-contain -mb-[17px]"
+              className="h-[32vh] sm:h-[44vh] md:h-[56vh] lg:h-[440px] object-contain"
             />
           </div>
 
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-base font-semibold leading-tight text-slate-900 sm:text-xl md:text-2xl">
             Acesso ao calendário de eventos
           </h1>
 
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-1 text-xs text-slate-600 sm:mt-2 sm:text-sm">
             Informe seu e-mail para solicitar um código de acesso.
           </p>
         </div>
 
+        {/* resto do conteúdo */}
         <div className="space-y-5">
           <div>
             <label

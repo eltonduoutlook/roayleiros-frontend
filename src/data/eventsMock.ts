@@ -70,7 +70,7 @@ export const eventsMock: EventItem[] = [
     {
         id: "e3",
         title: "Pular sete ondinhas",
-        date: `2026-03-08`,
+        date: `2026-03-14`,
         time: "10:30",
         unitId: "u3",
         destinationCity: "Bertioga",

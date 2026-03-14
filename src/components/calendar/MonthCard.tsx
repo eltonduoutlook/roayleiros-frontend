@@ -30,7 +30,6 @@ export function MonthCard({
       <CardContent className="flex items-center justify-between p-6">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
-
           <p className="mt-1 text-sm text-slate-500">
             {isPast
               ? "Mês encerrado"

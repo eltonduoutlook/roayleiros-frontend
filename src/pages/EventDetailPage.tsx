@@ -177,55 +177,7 @@ export default function EventDetailPage() {
               </span>
             </button>
           </div>
-
-          {/* <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 p-4">
-              <p className="mb-3 font-medium text-slate-900">
-                Eu vou ({goingCount})
-              </p>
-
-              {goingCount === 0 ? (
-                <p className="text-sm text-slate-500">
-                  Ainda não há participantes confirmados.
-                </p>
-              ) : (
-                <ul className="space-y-2">
-                  {goingParticipants.map((participant) => (
-                    <li
-                      key={participant.id}
-                      className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700"
-                    >
-                      {participant.name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 p-4">
-              <p className="mb-3 font-medium text-slate-900">
-                Tenho interesse ({interestedCount})
-              </p>
-
-              {interestedCount === 0 ? (
-                <p className="text-sm text-slate-500">
-                  Ainda não há interessados.
-                </p>
-              ) : (
-                <ul className="space-y-2">
-                  {interestedParticipants.map((participant) => (
-                    <li
-                      key={participant.id}
-                      className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700"
-                    >
-                      {participant.name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div> */}
-
+        
           <div className="grid gap-6 text-sm md:grid-cols-1">
             <div className="space-y-2">
               <p className="font-medium text-slate-900">Expansão</p>

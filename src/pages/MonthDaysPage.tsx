@@ -100,21 +100,33 @@ export default function MonthDaysPage() {
               <ChevronLeft className="mr-2 h-4 w-4 shrink-0" />
               {navigation.previous ? (
                 <span className="truncate">
-                  {monthNames[navigation.previous.month - 1]}
-                  {navigation.previous.year !== safeYear
-                    ? ` ${navigation.previous.year}`
-                    : ""}
+                  <span className="md:hidden">
+                    {monthNames[navigation.previous.month - 1].slice(0, 3)}
+                  </span>
+
+                  <span className="hidden md:inline">
+                    {monthNames[navigation.previous.month - 1]}
+                    {navigation.previous.year !== safeYear
+                      ? ` ${navigation.previous.year}`
+                      : ""}
+                  </span>
                 </span>
               ) : (
                 <span className="text-xs text-slate-500">
-                  {safeYear - 1} não há eventos
+                  <span className="md:inline">{safeYear - 1}</span>
+                  <span className="hidden md:inline">{safeYear - 1} não há eventos</span>
                 </span>
               )}
             </Button>
 
             <div className="flex h-11 w-full items-center justify-center rounded-md border border-blue-200 bg-blue-50 px-3 text-xl font-bold whitespace-nowrap text-blue-700">
               <span className="truncate">
-                {monthNames[monthIndex]} {safeYear}
+                <span className="md:hidden">
+                  {monthNames[monthIndex].slice(0, 3)}
+                </span>
+                <span className="hidden md:inline">
+                  {monthNames[monthIndex]}
+                </span>
               </span>
             </div>
 
@@ -132,14 +144,21 @@ export default function MonthDaysPage() {
             >
               {navigation.next ? (
                 <span className="truncate">
-                  {monthNames[navigation.next.month - 1]}
-                  {navigation.next.year !== safeYear
-                    ? ` ${navigation.next.year}`
-                    : ""}
+                  <span className="md:hidden">
+                    {monthNames[navigation.next.month - 1].slice(0, 3)}
+                  </span>
+
+                  <span className="hidden md:inline">
+                    {monthNames[navigation.next.month - 1]}
+                    {navigation.next.year !== safeYear
+                      ? ` ${navigation.next.year}`
+                      : ""}
+                  </span>
                 </span>
               ) : (
                 <span className="text-xs text-slate-500">
-                  {safeYear + 1} não há eventos
+                  <span className="md:inline">{safeYear + 1}</span>
+                  <span className="hidden md:inline">{safeYear + 1} não há eventos</span>
                 </span>
               )}
               <ChevronRight className="ml-2 h-4 w-4 shrink-0" />

@@ -44,6 +44,15 @@ export function isPastDay(dateString: string) {
     return targetDate < todayOnly;
 }
 
+export function isToday(year: number, month: number, day: number) {
+    const today = new Date();
+    return (
+        today.getFullYear() === year &&
+        today.getMonth() + 1 === month &&
+        today.getDate() === day
+    );
+}
+
 export function getPreviousMonth(month: number) {
     if (month <= 1) return null;
     return month - 1;
