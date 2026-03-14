@@ -46,6 +46,18 @@ export default function EventListPage() {
     return <Navigate to="/" replace />;
   }
 
+  const selectedUnitName =
+    units.find((unit) => String(unit.id) === String(unitId))?.name ?? "";
+
+  const emptyMessage =
+    safeDate && selectedUnitName
+      ? `Nenhum evento encontrado no dia ${formatDateBR(safeDate)} para a expansão ${selectedUnitName}.`
+      : safeDate
+        ? `Nenhum evento encontrado no dia ${formatDateBR(safeDate)}.`
+        : selectedUnitName
+          ? `Nenhum evento encontrado para a expansão ${selectedUnitName}.`
+          : "Nenhum evento encontrado para esta combinação de filtros.";
+
   return (
     <section className="space-y-6">
       <BreadcrumbNav
@@ -78,15 +90,15 @@ export default function EventListPage() {
       )}
 
       {!loading && !error && events.length === 0 && (
-        <div className="rounded-2xl border bg-white p-6 text-slate-500">
-          Nenhum evento encontrado para esta combinação de filtros.
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+          {emptyMessage}
         </div>
       )}
 
       {!loading && !error && events.length > 0 && (
         <div className="grid gap-4">
           {events.map((event) => {
-            const unit = units.find((item) => item.id === event.unitId);
+            const unit = units.find((item) => String(item.id) === String(event.unitId));
 
             return (
               <EventCard
@@ -94,7 +106,7 @@ export default function EventListPage() {
                 title={event.title}
                 time={event.time}
                 unitName={`Expansão: ${unit?.name ?? "não encontrada"}`}
-                destinationCity={"Destino: " + event.destinationCity}
+                destinationCity={`Destino: ${event.destinationCity}`}
                 description={event.description}
                 onClick={() => navigate(`/evento/${event.id}`)}
               />
