@@ -59,8 +59,16 @@ export default function HomePage() {
               onClick={() => previousYear && navigate(`/ano/${previousYear}`)}
             >
               <ChevronLeft className="mr-2 h-4 w-4" />
-              <span className="md:inline">{previousYear ?? `${selectedYear - 1}`}</span>
-              <span className="hidden md:inline">{previousYear ?? `${selectedYear - 1} não há eventos`}</span>
+
+              {/* Mobile */}
+              <span className="md:hidden">
+                {previousYear ?? `${selectedYear - 1}`}
+              </span>
+
+              {/* Desktop */}
+              <span className="hidden md:inline">
+                {previousYear ?? `${selectedYear - 1} não há eventos`}
+              </span>
             </Button>
 
             <div className="flex h-11 w-full items-center justify-center rounded-md border border-blue-200 bg-blue-50 px-3 text-xl font-bold whitespace-nowrap text-blue-700">
@@ -73,15 +81,23 @@ export default function HomePage() {
               disabled={!nextYear || loadingYears}
               onClick={() => nextYear && navigate(`/ano/${nextYear}`)}
             >
-              <span className="md:inline">{previousYear ?? `${selectedYear + 1}`}</span>
-              <span className="hidden md:inline">{previousYear ?? `${selectedYear + 1} não há eventos`}</span>
+              {/* Mobile */}
+              <span className="md:hidden">
+                {nextYear ?? `${selectedYear + 1}`}
+              </span>
+
+              {/* Desktop */}
+              <span className="hidden md:inline">
+                {nextYear ?? `${selectedYear + 1} não há eventos`}
+              </span>
+
               <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
         }
       />
 
-      {loading && <FullScreenLoader text="Carregando o calendário..." />}
+      {/* {loading && <FullScreenLoader text="Carregando o calendário..." />} */}
 
       {error && (
         <div className="rounded-2xl border bg-white p-6 text-red-500">

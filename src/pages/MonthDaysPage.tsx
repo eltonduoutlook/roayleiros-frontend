@@ -71,9 +71,9 @@ export default function MonthDaysPage() {
 
   return (
     <section className="space-y-6">
-      {loading ? (
-        <FullScreenLoader text={`Carregando o mês de ${monthNames[monthIndex]}`} />
-      ) : (
+    {/* {loading ? (
+        ""// <FullScreenLoader text={`Carregando o mês de ${monthNames[monthIndex]}`} />
+      ) : ( */}
         <BreadcrumbNav
           items={[
             { label: "Home", to: `/ano/${safeYear}` },
@@ -81,7 +81,7 @@ export default function MonthDaysPage() {
             { label: monthNames[monthIndex] },
           ]}
         />
-      )}
+      {/* )} */}
       <PageHeader
         actions={
           <div className="grid w-full grid-cols-3 gap-2">

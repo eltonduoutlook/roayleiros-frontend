@@ -80,16 +80,16 @@ function formatEventCount(count: number) {
   return `${displayCount} evento${count !== 1 ? "s" : ""}`;
 }
 
-function LoadingCalendar() {
-  return (
-    <div className="flex min-h-105 items-center justify-center rounded-2xl border bg-white">
-      <div className="flex flex-col items-center gap-1 md:gap-3">
-        <div className="h-7 w-7 animate-spin rounded-full border-4 border-blue-600 border-t-transparent md:h-8 md:w-8" />
-        <span className="text-sm text-slate-500">Carregando calendário...</span>
-      </div>
-    </div>
-  );
-}
+// function LoadingCalendar() {
+//   return (
+//     <div className="flex min-h-105 items-center justify-center rounded-2xl border bg-white">
+//       <div className="flex flex-col items-center gap-1 md:gap-3">
+//         <div className="h-7 w-7 animate-spin rounded-full border-4 border-blue-600 border-t-transparent md:h-8 md:w-8" />
+//         <span className="text-sm text-slate-500">Carregando calendário...</span>
+//       </div>
+//     </div>
+//   );
+// }
 
 function EmptyCalendarCell() {
   return (
@@ -173,9 +173,9 @@ export function CalendarMonthGrid({
   onSelectDay,
   loading = false,
 }: CalendarMonthGridProps) {
-  if (loading) {
-    return <LoadingCalendar />;
-  }
+  // if (loading) {
+  //   return <LoadingCalendar />;
+  // }
 
   const cells = buildMonthCalendarDays(year, month, enabledDays, eventCounts);
 
