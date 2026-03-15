@@ -6,7 +6,7 @@ type EventCardProps = {
   title: string;
   time: string;
   unitName: string;
-  destinationCity: string;
+  location: string;
   description: string;
   onClick: () => void;
 };
@@ -15,7 +15,7 @@ export function EventCard({
   title,
   time,
   unitName,
-  destinationCity,
+  location,
   description,
   onClick,
 }: EventCardProps) {
@@ -38,7 +38,7 @@ export function EventCard({
 
           <span className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
-            {destinationCity}
+            {location}
           </span>
         </div>
 

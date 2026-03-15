@@ -1,17 +1,16 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { authStorage } from "@/lib/authStorage";
 
 type ProtectedRouteProps = {
   children: ReactNode;
 };
 
-export default function ProtectedRoute({
-  children,
-}: ProtectedRouteProps) {
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
-  const isAuthenticated = localStorage.getItem("mock:isAuthenticated") === "true";
 
-  if (!isAuthenticated) {
+  if (!authStorage.isAuthenticated()) {
+    authStorage.clear();
     return <Navigate to="/acesso" replace state={{ from: location }} />;
   }
 

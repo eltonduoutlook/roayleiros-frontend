@@ -17,34 +17,38 @@ export default function MonthDaysPage() {
   const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
 
   const selectedYear = Number(year);
-  const monthNumber = Number(month);
+  const selectedMonth = Number(month);
 
   const isInvalid =
     !year ||
     !month ||
     Number.isNaN(selectedYear) ||
-    Number.isNaN(monthNumber) ||
-    monthNumber < 1 ||
-    monthNumber > 12;
+    Number.isNaN(selectedMonth) ||
+    selectedMonth < 1 ||
+    selectedMonth > 12;
 
-  const safeYear = isInvalid ? new Date().getFullYear() : selectedYear;
-  const safeMonthNumber = isInvalid ? 1 : monthNumber;
-  const monthIndex = safeMonthNumber - 1;
+  if (isInvalid) {
+    return <Navigate to="/" replace />;
+  }
 
-  const { data: availableYears } = useAsyncData(
-    () => eventsService.getAvailableYears(),
-    [],
-    [],
-  );
+  const safeYear = selectedYear;
+  const safeMonth = selectedMonth;
+  const monthIndex = safeMonth - 1;
+
+  const {
+    data: availableYears,
+    loading: loadingYears,
+    error: yearsError,
+  } = useAsyncData(() => eventsService.getAvailableYears(), [], []);
 
   const {
     data: enabledDays,
     loading: loadingDays,
     error: daysError,
   } = useAsyncData(
-    () => eventsService.getDaysWithEventsByMonth(safeYear, monthIndex),
+    () => eventsService.getDaysWithEventsByMonth(safeYear, safeMonth),
     [],
-    [safeYear, monthIndex],
+    [safeYear, safeMonth],
   );
 
   const {
@@ -52,43 +56,42 @@ export default function MonthDaysPage() {
     loading: loadingCounts,
     error: countsError,
   } = useAsyncData(
-    () => eventsService.getEventCountsByMonth(safeYear, monthIndex),
+    () => eventsService.getEventCountsByMonth(safeYear, safeMonth),
     {},
-    [safeYear, monthIndex],
+    [safeYear, safeMonth],
   );
-
-  if (isInvalid) {
-    return <Navigate to="/" replace />;
-  }
 
   const navigation =
     availableYears.length > 0
-      ? getMonthNavigation(safeYear, safeMonthNumber, availableYears)
+      ? getMonthNavigation(safeYear, safeMonth, availableYears)
       : { previous: null, next: null };
 
-  const loading = loadingDays || loadingCounts;
-  const error = daysError || countsError;
+  const loading = loadingYears || loadingDays || loadingCounts;
+  const error = yearsError || daysError || countsError;
+
+  if (loading && !enabledDays.length && !Object.keys(eventCounts).length) {
+    return (
+      <FullScreenLoader text={`Carregando o mês de ${monthNames[monthIndex]}`} />
+    );
+  }
 
   return (
     <section className="space-y-6">
-    {/* {loading ? (
-        ""// <FullScreenLoader text={`Carregando o mês de ${monthNames[monthIndex]}`} />
-      ) : ( */}
-        <BreadcrumbNav
-          items={[
-            { label: "Home", to: `/ano/${safeYear}` },
-            { label: String(safeYear), to: `/ano/${safeYear}` },
-            { label: monthNames[monthIndex] },
-          ]}
-        />
-      {/* )} */}
+      <BreadcrumbNav
+        items={[
+          { label: "Home", to: `/ano/${safeYear}` },
+          { label: String(safeYear), to: `/ano/${safeYear}` },
+          { label: monthNames[monthIndex] },
+        ]}
+      />
+
       <PageHeader
         actions={
           <div className="grid w-full grid-cols-3 gap-2">
             <Button
               variant="outline"
               className="h-11 w-full cursor-pointer justify-center whitespace-nowrap px-3"
-              disabled={!navigation.previous}
+              disabled={!navigation.previous || loading}
               onClick={() => {
                 if (!navigation.previous) return;
                 setSlideDirection(-1);
@@ -98,6 +101,7 @@ export default function MonthDaysPage() {
               }}
             >
               <ChevronLeft className="mr-2 h-4 w-4 shrink-0" />
+
               {navigation.previous ? (
                 <span className="truncate">
                   <span className="md:hidden">
@@ -114,7 +118,9 @@ export default function MonthDaysPage() {
               ) : (
                 <span className="text-xs text-slate-500">
                   <span className="md:inline">{safeYear - 1}</span>
-                  <span className="hidden md:inline">{safeYear - 1} não há eventos</span>
+                  <span className="hidden md:inline">
+                    {safeYear - 1} não há eventos
+                  </span>
                 </span>
               )}
             </Button>
@@ -133,7 +139,7 @@ export default function MonthDaysPage() {
             <Button
               variant="outline"
               className="h-11 w-full cursor-pointer justify-center whitespace-nowrap px-3"
-              disabled={!navigation.next}
+              disabled={!navigation.next || loading}
               onClick={() => {
                 if (!navigation.next) return;
                 setSlideDirection(1);
@@ -158,9 +164,12 @@ export default function MonthDaysPage() {
               ) : (
                 <span className="text-xs text-slate-500">
                   <span className="md:inline">{safeYear + 1}</span>
-                  <span className="hidden md:inline">{safeYear + 1} não há eventos</span>
+                  <span className="hidden md:inline">
+                    {safeYear + 1} não há eventos
+                  </span>
                 </span>
               )}
+
               <ChevronRight className="ml-2 h-4 w-4 shrink-0" />
             </Button>
           </div>
@@ -177,7 +186,7 @@ export default function MonthDaysPage() {
         <div className="relative overflow-hidden">
           <AnimatePresence mode="wait" custom={slideDirection}>
             <motion.div
-              key={`${safeYear}-${safeMonthNumber}`}
+              key={`${safeYear}-${safeMonth}`}
               custom={slideDirection}
               initial={{ x: slideDirection > 0 ? 120 : -120, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -186,7 +195,7 @@ export default function MonthDaysPage() {
             >
               <CalendarMonthGrid
                 year={safeYear}
-                month={safeMonthNumber}
+                month={safeMonth}
                 enabledDays={enabledDays}
                 eventCounts={eventCounts}
                 loading={loading}

@@ -1,11 +1,22 @@
 import { useEffect, useRef, useState } from "react";
+import type {
+  ChangeEvent,
+  ClipboardEvent,
+  KeyboardEvent,
+} from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { authService } from "@/services/authService";
+import { authStorage } from "@/lib/authStorage";
 import logoRR from "@/assets/logoRR.png";
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
+
+type AppErrorLike = {
+  message?: string;
+  code?: string;
+};
 
 export default function AccessPage() {
   const navigate = useNavigate();
@@ -14,16 +25,15 @@ export default function AccessPage() {
   const [codeRequested, setCodeRequested] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [showRegisterButton, setShowRegisterButton] = useState(false);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [resendCountdown, setResendCountdown] = useState(0);
 
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
+  const validatingRef = useRef(false);
 
-  const isAuthenticated =
-    localStorage.getItem("mock:isAuthenticated") === "true";
-
-  const emailNotFound = message === "E-mail não encontrado.";
+  const isAuthenticated = authStorage.isAuthenticated();
+  const emailNotFound = errorCode === "USER_NOT_FOUND";
 
   useEffect(() => {
     if (!codeRequested || resendCountdown <= 0) return;
@@ -45,149 +55,245 @@ export default function AccessPage() {
     if (!codeRequested) return;
 
     const code = otp.join("");
-    if (code.length === OTP_LENGTH && !otp.includes("")) {
+
+    if (
+      code.length === OTP_LENGTH &&
+      !otp.includes("") &&
+      !validatingRef.current
+    ) {
+      validatingRef.current = true;
       void handleAccess(code);
     }
   }, [otp, codeRequested]);
 
   useEffect(() => {
-    if (codeRequested) {
+    if (!codeRequested) return;
+
+    const timer = window.setTimeout(() => {
       focusInput(0);
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [codeRequested]);
 
   if (isAuthenticated) {
     return <Navigate to={`/ano/${new Date().getFullYear()}`} replace />;
   }
 
-  const clearOtp = () => {
-    setOtp(Array(OTP_LENGTH).fill(""));
-  };
+  function normalizeEmail(value: string) {
+    return value.trim().toLowerCase();
+  }
 
-  const focusInput = (index: number) => {
+  function isValidEmail(value: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
+  }
+
+  function clearOtp() {
+    setOtp(Array(OTP_LENGTH).fill(""));
+  }
+
+  function focusInput(index: number) {
     inputsRef.current[index]?.focus();
     inputsRef.current[index]?.select();
-  };
+  }
 
-  const handleRequestAccess = async () => {
+  function resetFeedback() {
+    setMessage("");
+    setErrorCode(null);
+  }
+
+  function getErrorDetails(error: unknown) {
+    if (error instanceof Error) {
+      const maybeError = error as Error & { code?: string };
+      return {
+        message: maybeError.message || "Ocorreu um erro.",
+        code: maybeError.code ?? null,
+      };
+    }
+
+    if (typeof error === "object" && error !== null) {
+      const maybeError = error as AppErrorLike;
+      return {
+        message: maybeError.message || "Ocorreu um erro.",
+        code: maybeError.code ?? null,
+      };
+    }
+
+    return {
+      message: "Ocorreu um erro.",
+      code: null,
+    };
+  }
+
+  function isUserNotFoundError(message: string, code: string | null) {
+    const normalized = message.toLowerCase();
+
+    return (
+      code === "USER_NOT_FOUND" ||
+      normalized.includes("não encontrado") ||
+      normalized.includes("nao encontrado") ||
+      normalized.includes("usuário não encontrado") ||
+      normalized.includes("usuario nao encontrado") ||
+      normalized.includes("user not found")
+    );
+  }
+
+  function fillOtpFromString(rawValue: string) {
+    const digits = rawValue.replace(/\D/g, "").slice(0, OTP_LENGTH);
+    if (!digits) return;
+
+    const nextOtp = Array(OTP_LENGTH).fill("");
+    digits.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+
+    setOtp(nextOtp);
+
+    const nextIndex = Math.min(digits.length - 1, OTP_LENGTH - 1);
+    window.setTimeout(() => {
+      focusInput(nextIndex);
+    }, 0);
+  }
+
+  async function handleRequestAccess() {
     if (emailNotFound) {
       handleGoToRegister();
       return;
     }
 
-    setLoading(true);
-    setMessage("");
-    setShowRegisterButton(false);
+    const normalizedEmail = normalizeEmail(email);
 
-    try {
-      const response = await authService.requestAccessCode(email);
-
-      if (!response.success) {
-        setMessage(response.message);
-
-        if (response.message === "E-mail não encontrado.") {
-          setShowRegisterButton(true);
-        }
-
-        return;
-      }
-
-      setCodeRequested(true);
-      clearOtp();
-      setResendCountdown(RESEND_SECONDS);
-      setMessage("Código enviado com sucesso para o e-mail informado.");
-      setShowRegisterButton(false);
-
-      window.setTimeout(() => {
-        focusInput(0);
-      }, 0);
-    } catch {
-      setMessage("Erro ao solicitar acesso.");
-      setShowRegisterButton(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    if (resendCountdown > 0 || loading) return;
-
-    setLoading(true);
-    setMessage("");
-    setShowRegisterButton(false);
-
-    try {
-      const response = await authService.requestAccessCode(email);
-
-      if (!response.success) {
-        setMessage(response.message);
-
-        if (response.message === "E-mail não encontrado.") {
-          setShowRegisterButton(true);
-        }
-
-        return;
-      }
-
-      clearOtp();
-      setResendCountdown(RESEND_SECONDS);
-      setMessage("Novo código solicitado com sucesso.");
-
-      window.setTimeout(() => {
-        focusInput(0);
-      }, 0);
-    } catch {
-      setMessage("Erro ao reenviar código.");
-      setShowRegisterButton(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAccess = async (finalCode?: string) => {
-    const code = finalCode ?? otp.join("");
-
-    if (code.length !== OTP_LENGTH) {
-      setMessage("Digite o código completo.");
+    if (!isValidEmail(normalizedEmail)) {
+      setMessage("Digite um e-mail válido.");
+      setErrorCode(null);
       return;
     }
 
     setLoading(true);
-    setMessage("");
-    setShowRegisterButton(false);
+    resetFeedback();
 
     try {
-      const response = await authService.validateAccessCode(email, code);
+      const response = await authService.requestAccessCode(normalizedEmail);
 
-      if (!response.success) {
-        clearOtp();
-        setMessage(response.message);
+      setEmail(normalizedEmail);
+      setCodeRequested(true);
+      clearOtp();
+      setResendCountdown(RESEND_SECONDS);
+      setMessage(response.message || "Código enviado para seu e-mail.");
+      setErrorCode(null);
 
-        if (response.message === "Usuário não encontrado.") {
-          setShowRegisterButton(true);
-        }
+      window.setTimeout(() => {
+        focusInput(0);
+      }, 0);
+    } catch (error) {
+      const { message, code } = getErrorDetails(error);
+      const notFound = isUserNotFoundError(message, code);
 
-        window.setTimeout(() => {
-          focusInput(0);
-        }, 0);
-        return;
-      }
-
-      if (response.user) {
-        localStorage.setItem("mock:user", JSON.stringify(response.user));
-        localStorage.setItem("mock:isAuthenticated", "true");
-      }
-
-      navigate("/");
-    } catch {
-      setMessage("Erro ao validar código.");
+      setMessage(message);
+      setErrorCode(notFound ? "USER_NOT_FOUND" : code);
+      setCodeRequested(false);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleOtpChange = (value: string, index: number) => {
-    const numericValue = value.replace(/\D/g, "");
+  async function handleResendCode() {
+    if (resendCountdown > 0 || loading) return;
+
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidEmail(normalizedEmail)) {
+      setMessage("Digite um e-mail válido.");
+      setErrorCode(null);
+      return;
+    }
+
+    setLoading(true);
+    resetFeedback();
+
+    try {
+      const response = await authService.requestAccessCode(normalizedEmail);
+
+      setEmail(normalizedEmail);
+      clearOtp();
+      setResendCountdown(RESEND_SECONDS);
+      setMessage(response.message || "Novo código enviado.");
+      setErrorCode(null);
+
+      window.setTimeout(() => {
+        focusInput(0);
+      }, 0);
+    } catch (error) {
+      const { message, code } = getErrorDetails(error);
+      setMessage(message);
+      setErrorCode(code);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleAccess(finalCode?: string) {
+    if (loading) {
+      validatingRef.current = false;
+      return;
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+    const code = (finalCode ?? otp.join("")).replace(/\D/g, "");
+
+    if (!isValidEmail(normalizedEmail)) {
+      setMessage("Digite um e-mail válido.");
+      setErrorCode(null);
+      validatingRef.current = false;
+      return;
+    }
+
+    if (code.length !== OTP_LENGTH) {
+      setMessage("Digite o código completo.");
+      setErrorCode(null);
+      validatingRef.current = false;
+      return;
+    }
+
+    setLoading(true);
+    resetFeedback();
+
+    try {
+      const response = await authService.validateAccessCode(normalizedEmail, code);
+      const user = response.user ?? response.data?.user;
+
+      if (user) {
+        authService.saveAuth(response);
+        navigate(`/ano/${new Date().getFullYear()}`, { replace: true });
+        return;
+      }
+
+      setMessage("Não foi possível concluir o acesso.");
+      setErrorCode(null);
+      clearOtp();
+
+      window.setTimeout(() => {
+        focusInput(0);
+      }, 0);
+    } catch (error) {
+      const { message, code } = getErrorDetails(error);
+
+      clearOtp();
+      setMessage(message);
+      setErrorCode(code);
+
+      window.setTimeout(() => {
+        focusInput(0);
+      }, 0);
+    } finally {
+      validatingRef.current = false;
+      setLoading(false);
+    }
+  }
+
+  function handleOtpChange(index: number, event: ChangeEvent<HTMLInputElement>) {
+    const rawValue = event.target.value;
+    const numericValue = rawValue.replace(/\D/g, "");
 
     if (!numericValue) {
       const nextOtp = [...otp];
@@ -197,19 +303,7 @@ export default function AccessPage() {
     }
 
     if (numericValue.length > 1) {
-      const pasted = numericValue.slice(0, OTP_LENGTH).split("");
-      const nextOtp = Array(OTP_LENGTH).fill("");
-
-      pasted.forEach((digit, i) => {
-        nextOtp[i] = digit;
-      });
-
-      setOtp(nextOtp);
-
-      const nextIndex = Math.min(pasted.length - 1, OTP_LENGTH - 1);
-      window.setTimeout(() => {
-        focusInput(nextIndex);
-      }, 0);
+      fillOtpFromString(numericValue);
       return;
     }
 
@@ -220,73 +314,74 @@ export default function AccessPage() {
     if (index < OTP_LENGTH - 1) {
       focusInput(index + 1);
     }
-  };
+  }
 
-  const handleOtpKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement>,
-    index: number,
-  ) => {
+  function handleOtpKeyDown(index: number, event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      void handleAccess();
+      return;
+    }
+
     if (event.key === "Backspace") {
-      if (otp[index]) {
-        const nextOtp = [...otp];
+      event.preventDefault();
+
+      const nextOtp = [...otp];
+
+      if (nextOtp[index]) {
         nextOtp[index] = "";
         setOtp(nextOtp);
         return;
       }
 
       if (index > 0) {
+        nextOtp[index - 1] = "";
+        setOtp(nextOtp);
         focusInput(index - 1);
       }
+
+      return;
     }
 
     if (event.key === "ArrowLeft" && index > 0) {
       event.preventDefault();
       focusInput(index - 1);
+      return;
     }
 
     if (event.key === "ArrowRight" && index < OTP_LENGTH - 1) {
       event.preventDefault();
       focusInput(index + 1);
     }
-  };
+  }
 
-  const handleOtpPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+  function handleOtpPaste(event: ClipboardEvent<HTMLInputElement>) {
     event.preventDefault();
+    const pasted = event.clipboardData.getData("text");
+    fillOtpFromString(pasted);
+  }
 
-    const pasted = event.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, OTP_LENGTH);
+  function handleGoToRegister() {
+    navigate(`/solicitar-cadastro?email=${encodeURIComponent(normalizeEmail(email))}`);
+  }
 
-    if (!pasted) return;
-
-    const nextOtp = Array(OTP_LENGTH).fill("");
-    pasted.split("").forEach((digit, index) => {
-      nextOtp[index] = digit;
-    });
-
-    setOtp(nextOtp);
-
-    const nextIndex = Math.min(pasted.length - 1, OTP_LENGTH - 1);
-    window.setTimeout(() => {
-      focusInput(nextIndex);
-    }, 0);
-  };
-
-  const handleGoToRegister = () => {
-    navigate(`/solicitar-cadastro?email=${encodeURIComponent(email)}`);
-  };
+  function handleResetEmail() {
+    setCodeRequested(false);
+    clearOtp();
+    setResendCountdown(0);
+    resetFeedback();
+    validatingRef.current = false;
+  }
 
   return (
     <div className="flex min-h-dvh justify-center bg-slate-100 px-4 py-3">
       <div className="flex min-h-[calc(100dvh-1.5rem)] w-full max-w-md flex-col rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
         <div className="mb-5 sm:mb-6">
           <div className="mb-3 flex justify-center overflow-hidden">
             <img
               src={logoRR}
               alt="Royal Riders"
-              className="h-[32vh] sm:h-[44vh] md:h-[56vh] lg:h-[440px] object-contain"
+              className="h-[32vh] object-contain sm:h-[44vh] md:h-[56vh] lg:h-[440px]"
             />
           </div>
 
@@ -299,7 +394,6 @@ export default function AccessPage() {
           </p>
         </div>
 
-        {/* resto do conteúdo */}
         <div className="space-y-5">
           <div>
             <label
@@ -316,14 +410,27 @@ export default function AccessPage() {
               disabled={codeRequested}
               onChange={(e) => {
                 setEmail(e.target.value);
-                if (!codeRequested) {
-                  setMessage("");
-                  setShowRegisterButton(false);
+                if (!codeRequested) resetFeedback();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !codeRequested) {
+                  e.preventDefault();
+                  void handleRequestAccess();
                 }
               }}
               placeholder="Digite seu e-mail"
               className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-slate-900 outline-none transition focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
             />
+
+            {codeRequested && (
+              <button
+                type="button"
+                onClick={handleResetEmail}
+                className="mt-2 text-sm font-medium text-blue-600"
+              >
+                Alterar e-mail
+              </button>
+            )}
 
             {emailNotFound && !codeRequested && (
               <div className="mt-3 flex w-full items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
@@ -361,11 +468,11 @@ export default function AccessPage() {
                     }}
                     type="text"
                     inputMode="numeric"
-                    autoComplete="one-time-code"
+                    autoComplete={index === 0 ? "one-time-code" : "off"}
                     maxLength={1}
                     value={digit}
-                    onChange={(e) => handleOtpChange(e.target.value, index)}
-                    onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                    onChange={(event) => handleOtpChange(index, event)}
+                    onKeyDown={(event) => handleOtpKeyDown(index, event)}
                     onPaste={handleOtpPaste}
                     className="h-12 w-12 rounded-xl border border-slate-300 text-center text-lg font-semibold text-slate-900 outline-none transition focus:border-blue-500"
                   />
@@ -378,24 +485,30 @@ export default function AccessPage() {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={codeRequested ? () => void handleAccess() : handleRequestAccess}
-            disabled={
-              loading ||
-              !email ||
-              (codeRequested && otp.join("").length !== OTP_LENGTH)
-            }
-            className="w-full cursor-pointer rounded-xl bg-blue-600 py-3 font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading
-              ? "Carregando..."
-              : codeRequested
-                ? "Acessar"
+          {!codeRequested && (
+            <button
+              type="button"
+              onClick={handleRequestAccess}
+              disabled={loading || !email.trim()}
+              className="w-full cursor-pointer rounded-xl bg-blue-600 py-3 font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading
+                ? "Carregando..."
                 : emailNotFound
                   ? "Solicitar cadastro"
                   : "Solicitar acesso"}
-          </button>
+            </button>
+          )}
+
+          {emailNotFound && !codeRequested && (
+            <button
+              type="button"
+              onClick={handleGoToRegister}
+              className="w-full cursor-pointer rounded-xl bg-emerald-600 py-3 font-medium text-white transition hover:bg-emerald-700"
+            >
+              Solicitar cadastro
+            </button>
+          )}
 
           {!codeRequested && !emailNotFound && (
             <p className="mt-2 text-sm italic text-slate-600">

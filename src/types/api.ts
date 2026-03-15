@@ -8,6 +8,4 @@ export type ApiErrorResponse = {
   message: string;
 };
 
-export type ApiResponse<T> =
-  | ApiSuccessResponse<T>
-  | ApiErrorResponse;
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;

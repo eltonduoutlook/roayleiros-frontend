@@ -17,11 +17,11 @@ export default function HomePage() {
 
   const isInvalidYear = Number.isNaN(selectedYear);
 
-  const { data: availableYears, loading: loadingYears } = useAsyncData(
-    () => eventsService.getAvailableYears(),
-    [],
-    [],
-  );
+  const {
+    data: availableYears,
+    loading: loadingYears,
+    error: yearsError,
+  } = useAsyncData(() => eventsService.getAvailableYears(), [], []);
 
   const {
     data: monthEventCounts,
@@ -37,6 +37,13 @@ export default function HomePage() {
     return <Navigate to={`/ano/${currentYear}`} replace />;
   }
 
+  const hasAvailableYears = availableYears.length > 0;
+  const yearExists = availableYears.includes(selectedYear);
+
+  if (!loadingYears && hasAvailableYears && !yearExists) {
+    return <Navigate to={`/ano/${availableYears[availableYears.length - 1]}`} replace />;
+  }
+
   const previousYear =
     [...availableYears]
       .filter((year) => year < selectedYear)
@@ -46,6 +53,9 @@ export default function HomePage() {
     [...availableYears]
       .filter((year) => year > selectedYear)
       .sort((a, b) => a - b)[0] ?? null;
+
+  const isPageLoading = loading || loadingYears;
+  const pageError = error || yearsError;
 
   return (
     <section className="space-y-6">
@@ -60,12 +70,10 @@ export default function HomePage() {
             >
               <ChevronLeft className="mr-2 h-4 w-4" />
 
-              {/* Mobile */}
               <span className="md:hidden">
                 {previousYear ?? `${selectedYear - 1}`}
               </span>
 
-              {/* Desktop */}
               <span className="hidden md:inline">
                 {previousYear ?? `${selectedYear - 1} não há eventos`}
               </span>
@@ -81,12 +89,10 @@ export default function HomePage() {
               disabled={!nextYear || loadingYears}
               onClick={() => nextYear && navigate(`/ano/${nextYear}`)}
             >
-              {/* Mobile */}
               <span className="md:hidden">
                 {nextYear ?? `${selectedYear + 1}`}
               </span>
 
-              {/* Desktop */}
               <span className="hidden md:inline">
                 {nextYear ?? `${selectedYear + 1} não há eventos`}
               </span>
@@ -97,15 +103,15 @@ export default function HomePage() {
         }
       />
 
-      {/* {loading && <FullScreenLoader text="Carregando o calendário..." />} */}
+      {isPageLoading && <FullScreenLoader text="Carregando o calendário..." />}
 
-      {error && (
+      {pageError && (
         <div className="rounded-2xl border bg-white p-6 text-red-500">
-          {error}
+          {pageError}
         </div>
       )}
 
-      {!loading && !error && (
+      {!isPageLoading && !pageError && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {monthNames.map((month, index) => (
             <MonthCard

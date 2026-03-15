@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type AsyncState<T> = {
   data: T;
@@ -16,22 +16,53 @@ export function useAsyncData<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+
       const result = await fetcher();
       setData(result);
-    } catch {
-      setError("Erro ao carregar dados.");
+    } catch (err) {
+      console.error("useAsyncData error:", err);
+      setError(
+        err instanceof Error ? err.message : "Erro ao carregar dados.",
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, deps);
 
   useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let active = true;
+
+    const run = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const result = await fetcher();
+        if (!active) return;
+
+        setData(result);
+      } catch (err) {
+        if (!active) return;
+
+        console.error("useAsyncData error:", err);
+        setError(
+          err instanceof Error ? err.message : "Erro ao carregar dados.",
+        );
+      } finally {
+        if (!active) return;
+        setLoading(false);
+      }
+    };
+
+    void run();
+
+    return () => {
+      active = false;
+    };
   }, deps);
 
   return {

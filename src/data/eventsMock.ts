@@ -7,7 +7,7 @@ export const eventsMock: EventItem[] = [
         date: `2026-01-17`,
         time: "10:00",
         unitId: "u1",
-        destinationCity: "Holambra",
+        location: "Holambra",
         state: "SP",
         description: "Passeio para a cidade de Holambra.",
 
@@ -38,7 +38,7 @@ export const eventsMock: EventItem[] = [
         date: `2026-01-17`,
         time: "14:00",
         unitId: "u2",
-        destinationCity: "Piracicaba",
+        location: "Piracicaba",
         state: "SP",
         description: "Passeio para a cidade de Piracicaba.",
 
@@ -73,7 +73,7 @@ export const eventsMock: EventItem[] = [
         date: `2026-03-14`,
         time: "10:30",
         unitId: "u3",
-        destinationCity: "Bertioga",
+        location: "Bertioga",
         state: "SP",
         description: "Passeio para a cidade de Bertioga.",
         meetingPoints: [
@@ -107,7 +107,7 @@ export const eventsMock: EventItem[] = [
         date: `2026-07-25`,
         time: "08:30",
         unitId: "u1",
-        destinationCity: "Pirapora do Bom Jesus",
+        location: "Pirapora do Bom Jesus",
         state: "SP",
         description: "Capacitação da equipe comercial com foco em abordagem e fechamento.",
         meetingPoints: [
@@ -141,7 +141,7 @@ export const eventsMock: EventItem[] = [
         date: `2026-11-07`,
         time: "16:00",
         unitId: "u2",
-        destinationCity: "Paraty",
+        location: "Paraty",
         state: "RJ",
         description: "Passeio para a cidade de Paraty.",
         meetingPoints: [
@@ -178,7 +178,7 @@ export const eventsMock: EventItem[] = [
         date: `2026-11-07`,
         time: "09:15",
         unitId: "u4",
-        destinationCity: "São Miguel Arcanjo",
+        location: "São Miguel Arcanjo",
         state: "SP",
         description: "Visitar a onça Escuro.",
         meetingPoints: [

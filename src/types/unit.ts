@@ -1,5 +1,5 @@
 export type Unit = {
   id: string;
   name: string;
-  city: string;
+  city?: string | null;
 };

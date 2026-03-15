@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Clock, Clock3, MapPin, Navigation, Calendar, Star, Hand } from "lucide-react";
+import {
+  Building2,
+  Clock,
+  Clock3,
+  MapPin,
+  Navigation,
+  Calendar,
+  Star,
+  Hand,
+} from "lucide-react";
 import { Navigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,23 +75,32 @@ export default function EventDetailPage() {
 
   const viewEvent = eventState ?? event;
 
-  const unit = units.find((item) => item.id === viewEvent.unitId);
-  const eventYear = new Date(viewEvent.date).getFullYear();
-  const monthIndex = new Date(viewEvent.date).getMonth();
+  const unit = units.find(
+    (item) => String(item.id) === String(viewEvent.unitId),
+  );
+
+  const [yearString, monthString] = viewEvent.date.split("-");
+  const eventYear = Number(yearString);
+  const monthIndex = Number(monthString) - 1;
 
   const goingParticipants = viewEvent.goingParticipants ?? [];
   const interestedParticipants = viewEvent.interestedParticipants ?? [];
+  const meetingPoints = viewEvent.meetingPoints ?? [];
 
   const goingCount = goingParticipants.length;
   const interestedCount = interestedParticipants.length;
 
-  const isGoing = !!loggedUser && goingParticipants.some(
-    (participant) => String(participant.id) === String(loggedUser.id),
-  );
+  const isGoing =
+    !!loggedUser &&
+    goingParticipants.some(
+      (participant) => String(participant.id) === String(loggedUser.id),
+    );
 
-  const isInterested = !!loggedUser && interestedParticipants.some(
-    (participant) => String(participant.id) === String(loggedUser.id),
-  );
+  const isInterested =
+    !!loggedUser &&
+    interestedParticipants.some(
+      (participant) => String(participant.id) === String(loggedUser.id),
+    );
 
   const handleReaction = async (reaction: "going" | "interested") => {
     if (updatingReaction) return;
@@ -120,7 +138,6 @@ export default function EventDetailPage() {
 
       <Card className="rounded-2xl">
         <CardContent className="space-y-6 sm:p-4 md:p-6">
-
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="inline-flex h-10 items-center gap-2 rounded-xl border border-blue-200 bg-blue-100 px-3 text-sm font-medium text-blue-700 sm:px-4">
@@ -142,18 +159,20 @@ export default function EventDetailPage() {
                 type="button"
                 onClick={() => void handleReaction("going")}
                 disabled={updatingReaction}
-                className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-medium transition sm:h-10 sm:w-auto ${isGoing
-                  ? "border-green-600 bg-green-600 text-white"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                  } disabled:cursor-not-allowed disabled:opacity-60`}
+                className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-medium transition sm:h-10 sm:w-auto ${
+                  isGoing
+                    ? "border-green-600 bg-green-600 text-white"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                } disabled:cursor-not-allowed disabled:opacity-60`}
               >
                 <Star className="h-4 w-4 shrink-0" />
                 <span>Eu vou</span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${isGoing
-                    ? "bg-white/20 text-white"
-                    : "bg-slate-100 text-slate-700"
-                    }`}
+                  className={`rounded-full px-2 py-0.5 text-xs ${
+                    isGoing
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
                 >
                   {goingCount}
                 </span>
@@ -163,18 +182,20 @@ export default function EventDetailPage() {
                 type="button"
                 onClick={() => void handleReaction("interested")}
                 disabled={updatingReaction}
-                className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-medium transition sm:h-10 sm:w-auto ${isInterested
-                  ? "border-amber-500 bg-amber-500 text-white"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                  } disabled:cursor-not-allowed disabled:opacity-60`}
+                className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-medium transition sm:h-10 sm:w-auto ${
+                  isInterested
+                    ? "border-amber-500 bg-amber-500 text-white"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                } disabled:cursor-not-allowed disabled:opacity-60`}
               >
                 <Hand className="h-4 w-4 shrink-0" />
                 <span>Tenho interesse</span>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${isInterested
-                    ? "bg-white/20 text-white"
-                    : "bg-slate-100 text-slate-700"
-                    }`}
+                  className={`rounded-full px-2 py-0.5 text-xs ${
+                    isInterested
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
                 >
                   {interestedCount}
                 </span>
@@ -190,7 +211,7 @@ export default function EventDetailPage() {
                 {loadingUnits ? (
                   <span className="text-slate-400">Carregando expansão...</span>
                 ) : unit ? (
-                  `${unit.name} — ${unit.city}`
+                  unit.city ? `${unit.name} — ${unit.city}` : unit.name
                 ) : (
                   "Expansão não encontrada"
                 )}
@@ -201,7 +222,7 @@ export default function EventDetailPage() {
               <p className="font-medium text-slate-900">Destino</p>
               <p className="flex items-center gap-2 text-slate-500">
                 <MapPin className="h-4 w-4" />
-                {viewEvent.destinationCity}
+                {viewEvent.location}
               </p>
             </div>
 
@@ -223,7 +244,7 @@ export default function EventDetailPage() {
             <p className="font-medium text-slate-900">Pontos de encontro</p>
 
             <ul className="space-y-2 text-slate-600">
-              {viewEvent.meetingPoints.map((point) => (
+              {meetingPoints.map((point) => (
                 <li key={point.id} className="rounded-lg border bg-slate-50">
                   <a
                     href={point.mapLink}
@@ -239,15 +260,12 @@ export default function EventDetailPage() {
 
                       <div className="flex min-w-0 items-center gap-1">
                         <MapPin className="h-4 w-4 shrink-0" />
-
-                        {/* limita largura e aplica ... */}
                         <span className="max-w-[160px] truncate sm:max-w-none">
                           {point.name}
                         </span>
                       </div>
                     </div>
 
-                    {/* ícone do mapa */}
                     <Navigation className="h-5 w-5 shrink-0 text-blue-700" />
                   </a>
                 </li>

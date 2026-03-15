@@ -3,22 +3,24 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { BreadcrumbNav } from "@/components/common/BreadcrumbNav";
 import { PageHeader } from "@/components/common/PageHeader";
 import { EventCard } from "@/components/calendar/EventCard";
-import { UnitFilter } from "@/components/filters/UnitFilter";
+
 import { formatDateBR, monthNames } from "@/lib/date";
 import { eventsService } from "@/services/events.service";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { FullScreenLoader } from "@/components/common/FullScreenLoader";
+import { UnitFilter } from "@/components/filters/UnitFilter";
 
 export default function EventListPage() {
   const navigate = useNavigate();
   const { date } = useParams();
   const [unitId, setUnitId] = useState("");
 
-  const safeDate = date ?? "2000-01-01";
   const isInvalidDate = !date;
+  const safeDate = date ?? "2000-01-01";
 
-  const eventYear = new Date(safeDate).getFullYear();
-  const monthIndex = new Date(safeDate).getMonth();
+  const [yearString, monthString] = safeDate.split("-");
+  const eventYear = Number(yearString);
+  const monthIndex = Number(monthString) - 1;
 
   const { data: units, loading: loadingUnits } = useAsyncData(
     () => eventsService.getUnits(),
@@ -32,31 +34,31 @@ export default function EventListPage() {
     error,
   } = useAsyncData(
     () =>
-      eventsService.getEventsByDate(safeDate, { unitId: unitId || undefined }),
+      eventsService.getEventsByDate(safeDate, {
+        unitId: unitId || undefined,
+      }),
     [],
     [safeDate, unitId],
   );
+
+  const unitsMap = useMemo(() => {
+    return new Map(units.map((unit) => [String(unit.id), unit.name]));
+  }, [units]);
 
   const subtitle = useMemo(() => {
     if (loading) return "Carregando eventos...";
     return `${events.length} evento(s) encontrado(s).`;
   }, [events.length, loading]);
 
+  const selectedUnitName = unitsMap.get(String(unitId)) ?? "";
+
+  const emptyMessage = selectedUnitName
+    ? `Nenhum evento encontrado no dia ${formatDateBR(safeDate)} para a expansão ${selectedUnitName}.`
+    : `Nenhum evento encontrado no dia ${formatDateBR(safeDate)}.`;
+
   if (isInvalidDate) {
     return <Navigate to="/" replace />;
   }
-
-  const selectedUnitName =
-    units.find((unit) => String(unit.id) === String(unitId))?.name ?? "";
-
-  const emptyMessage =
-    safeDate && selectedUnitName
-      ? `Nenhum evento encontrado no dia ${formatDateBR(safeDate)} para a expansão ${selectedUnitName}.`
-      : safeDate
-        ? `Nenhum evento encontrado no dia ${formatDateBR(safeDate)}.`
-        : selectedUnitName
-          ? `Nenhum evento encontrado para a expansão ${selectedUnitName}.`
-          : "Nenhum evento encontrado para esta combinação de filtros.";
 
   return (
     <section className="space-y-6">
@@ -81,10 +83,10 @@ export default function EventListPage() {
         <UnitFilter units={units} value={unitId} onChange={setUnitId} />
       )}
 
-      {loading && <FullScreenLoader text="Carregando detalhes do evento..." />}
+      {loading && <FullScreenLoader text="Carregando eventos..." />}
 
       {error && (
-        <div className="rounded-2xl border bg-white p-6 text-red-500">
+        <div className="rounded-2xl border border-red-200 bg-white p-6 text-red-500">
           {error}
         </div>
       )}
@@ -97,21 +99,17 @@ export default function EventListPage() {
 
       {!loading && !error && events.length > 0 && (
         <div className="grid gap-4">
-          {events.map((event) => {
-            const unit = units.find((item) => String(item.id) === String(event.unitId));
-
-            return (
-              <EventCard
-                key={event.id}
-                title={event.title}
-                time={event.time}
-                unitName={`Expansão: ${unit?.name ?? "não encontrada"}`}
-                destinationCity={`Destino: ${event.destinationCity}`}
-                description={event.description}
-                onClick={() => navigate(`/evento/${event.id}`)}
-              />
-            );
-          })}
+          {events.map((event) => (
+            <EventCard
+              key={event.id}
+              title={event.title}
+              time={event.time}
+              unitName={`Expansão: ${unitsMap.get(String(event.unitId)) ?? "não encontrada"}`}
+              location={`Destino: ${event.location}`}
+              description={event.description}
+              onClick={() => navigate(`/evento/${event.id}`)}
+            />
+          ))}
         </div>
       )}
     </section>
