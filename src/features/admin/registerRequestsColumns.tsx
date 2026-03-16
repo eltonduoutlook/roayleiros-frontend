@@ -97,6 +97,14 @@ export function buildRegisterRequestsColumns({
             cell: ({ row }) => (
                 <div className="flex flex-wrap gap-2">
                     {getStatusBadge(row.original.status)}
+                </div>
+            ),
+        },
+        {
+            accessorKey: "approvedLevel",
+            header: "Tipo de Usuário",
+            cell: ({ row }) => (
+                <div className="flex flex-wrap gap-2">
                     {row.original.approvedLevel ? (
                         <Badge variant="outline">{row.original.approvedLevel}</Badge>
                     ) : null}
