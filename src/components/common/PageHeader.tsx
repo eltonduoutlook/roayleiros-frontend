@@ -15,7 +15,7 @@ export function PageHeader({ title, subtitle, description, actions }: PageHeader
       {hasHeading ? (
         <div>
           {title ? (
-            <h2 className="text-3xl font-bold text-slate-900">{title}</h2>
+            <p className="text-2xl font-bold text-slate-900">{title}</p>
           ) : null}
           {subtitle ? <p className="mt-1 text-slate-500">{subtitle}</p> : null}
           {description ? <p className="mt-1 text-slate-500">{description}</p> : null}
