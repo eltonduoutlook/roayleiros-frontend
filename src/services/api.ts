@@ -77,6 +77,7 @@ async function request<T>(
 ): Promise<T> {
   const response = await fetch(buildUrl(path, params), {
     ...options,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(options.headers ?? {}),
@@ -94,28 +95,28 @@ export const api = {
   post<T>(path: string, body?: unknown) {
     return request<T>(path, {
       method: "POST",
-      body: body ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   },
 
   put<T>(path: string, body?: unknown) {
     return request<T>(path, {
       method: "PUT",
-      body: body ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   },
 
   patch<T>(path: string, body?: unknown) {
     return request<T>(path, {
       method: "PATCH",
-      body: body ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   },
 
   delete<T>(path: string, body?: unknown) {
     return request<T>(path, {
       method: "DELETE",
-      body: body ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   },
 };

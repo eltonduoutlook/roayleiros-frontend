@@ -3,10 +3,11 @@ import type { ReactNode } from "react";
 type PageHeaderProps = {
   title?: string;
   subtitle?: string;
+  description?: string;
   actions?: ReactNode;
 };
 
-export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, description, actions }: PageHeaderProps) {
   const hasHeading = Boolean(title || subtitle);
 
   return (
@@ -17,6 +18,7 @@ export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
             <h2 className="text-3xl font-bold text-slate-900">{title}</h2>
           ) : null}
           {subtitle ? <p className="mt-1 text-slate-500">{subtitle}</p> : null}
+          {description ? <p className="mt-1 text-slate-500">{description}</p> : null}
         </div>
       ) : null}
 

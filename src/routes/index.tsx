@@ -8,6 +8,7 @@ import EventListPage from "@/pages/EventListPage";
 import EventDetailPage from "@/pages/EventDetailPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import RequestRegistrationPage from "@/pages/RequestRegistrationPage";
+import AdminRegisterRequestsPage from "@/pages/AdminRegisterRequestsPage";
 
 const currentYear = new Date().getFullYear();
 
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: "ano/:year/mes/:month", element: <MonthDaysPage /> },
       { path: "eventos/:date", element: <EventListPage /> },
       { path: "evento/:id", element: <EventDetailPage /> },
+      { path: "admin/solicitacoes", element: <AdminRegisterRequestsPage /> },
       { path: "404", element: <NotFoundPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],
