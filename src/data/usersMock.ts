@@ -19,7 +19,7 @@ export const usersMock: UserItem[] = [
       phone: "(11) 98888-2222",
       active: true,
       level: "manager",
-      accessCode: null,
+      accessCode: 123,
   },
   {
       id: "usr3",
@@ -29,6 +29,6 @@ export const usersMock: UserItem[] = [
       phone: "(11) 97777-3333",
       active: false,
       level: "user",
-      accessCode: null,
+      accessCode: 123,
   },
 ];

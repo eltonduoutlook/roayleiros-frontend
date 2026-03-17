@@ -1,6 +1,7 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import RoleRoute from "@/components/auth/RoleRoute";
 import AccessPage from "@/pages/AccessPage";
 import HomePage from "@/pages/HomePage";
 import MonthDaysPage from "@/pages/MonthDaysPage";
@@ -9,6 +10,7 @@ import EventDetailPage from "@/pages/EventDetailPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import RequestRegistrationPage from "@/pages/RequestRegistrationPage";
 import AdminRegisterRequestsPage from "@/pages/AdminRegisterRequestsPage";
+import AdminHome from "@/pages/AdminHome";
 
 const currentYear = new Date().getFullYear();
 
@@ -34,7 +36,24 @@ export const router = createBrowserRouter([
       { path: "ano/:year/mes/:month", element: <MonthDaysPage /> },
       { path: "eventos/:date", element: <EventListPage /> },
       { path: "evento/:id", element: <EventDetailPage /> },
-      { path: "admin/solicitacoes", element: <AdminRegisterRequestsPage /> },
+
+      {
+        path: "admin",
+        element: (
+          <RoleRoute allowedLevels={["ADMIN", "COORDINATOR"]}>
+            <AdminHome />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "admin/solicitacoes",
+        element: (
+          <RoleRoute allowedLevels={["ADMIN"]}>
+            <AdminRegisterRequestsPage />
+          </RoleRoute>
+        ),
+      },
+
       { path: "404", element: <NotFoundPage /> },
       { path: "*", element: <NotFoundPage /> },
     ],

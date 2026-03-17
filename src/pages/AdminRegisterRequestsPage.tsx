@@ -1,5 +1,4 @@
-import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
 import { CheckCircle2, Clock3, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
@@ -8,15 +7,41 @@ import { Button } from "@/components/ui/button";
 import { adminService } from "@/services/admin.service";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { FullScreenLoader } from "@/components/common/FullScreenLoader";
-import { buildRegisterRequestsColumns, RegisterRequestRow } from "@/features/admin/registerRequestsColumns";
+
 import { DataTable } from "@/components/common/DataTable";
 import { StatCard } from "@/components/common/StatCard";
 import { DashboardStatsGrid } from "@/components/common/DashboardStatsGrid";
+import { RegisterRequestEditModal } from "@/features/admin/RegisterRequestEditModal";
+import { buildRegisterRequestsColumns, RegisterRequestRow } from "@/features/admin/RegisterRequestsColumns";
+import type { UserLevel } from "@/services/admin.service";
 
-
+type AuthUser = {
+  id: string;
+  name: string;
+  city: string;
+  email: string;
+  phone: string;
+  active: boolean;
+  level: UserLevel;
+};
 
 export default function AdminRegisterRequestsPage() {
-    const navigate = useNavigate();
+    const [selectedRequest, setSelectedRequest] = useState<RegisterRequestRow | null>(null);
+
+    const currentUserLevel = useMemo<UserLevel>(() => {
+        const storedUser = localStorage.getItem("auth:user");
+
+        if (!storedUser) {
+            return "MEMBER";
+        }
+
+        try {
+            const user = JSON.parse(storedUser) as AuthUser;
+            return user.level ?? "MEMBER";
+        } catch {
+            return "MEMBER";
+        }
+    }, []);
 
     const {
         data,
@@ -46,19 +71,14 @@ export default function AdminRegisterRequestsPage() {
         () =>
             buildRegisterRequestsColumns({
                 onEdit: (row: RegisterRequestRow) => {
-                    if (row.createdUserId) {
-                        navigate(`/admin/membros/${row.createdUserId}/editar`);
-                        return;
-                    }
-
-                    navigate(`/admin/solicitacoes-cadastro/${row.id}`);
+                    setSelectedRequest(row);
                 },
             }),
-        [navigate],
+        [],
     );
 
     if (loading) {
-        return <FullScreenLoader text="Carregando solicitações..." />;
+        return <FullScreenLoader text="Carregando solicitações de cadastro..." />;
     }
 
     return (
@@ -129,17 +149,23 @@ export default function AdminRegisterRequestsPage() {
                             data={data}
                             emptyMessage="Nenhuma solicitação encontrada."
                             onRowClick={(row) => {
-                                if (row.createdUserId) {
-                                    navigate(`/admin/membros/${row.createdUserId}/editar`);
-                                    return;
-                                }
-
-                                navigate(`/admin/solicitacoes-cadastro/${row.id}`);
+                                setSelectedRequest(row);
                             }}
                         />
                     )}
                 </CardContent>
             </Card>
+
+            <RegisterRequestEditModal
+                open={!!selectedRequest}
+                request={selectedRequest}
+                currentUserLevel={currentUserLevel}
+                onClose={() => setSelectedRequest(null)}
+                onSuccess={async () => {
+                    setSelectedRequest(null);
+                    await reload();
+                }}
+            />
         </div>
     );
 }

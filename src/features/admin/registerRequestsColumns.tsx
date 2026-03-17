@@ -2,22 +2,9 @@ import { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2, Clock3, Pencil, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { AdminRegisterRequestItem } from "@/services/admin.service";
 
-export type RegisterRequestRow = {
-    id: string;
-    name: string;
-    city: string;
-    email: string;
-    phone: string;
-    status: string;
-    approvedLevel: string | null;
-    rejectionReason: string | null;
-    reviewedAt: string | null;
-    reviewedByUserId: string | null;
-    createdUserId: string | null;
-    createdAt: string;
-    updatedAt: string;
-};
+export type RegisterRequestRow = AdminRegisterRequestItem;
 
 function formatDateTimeBR(value: string | null) {
     if (!value) return "—";

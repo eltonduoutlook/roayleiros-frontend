@@ -1,4 +1,4 @@
-import { CalendarDays, LogOut, User } from "lucide-react";
+import { CalendarDays, LogOut, Shield, User } from "lucide-react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { authStorage, type AuthUser } from "@/lib/authStorage";
@@ -25,6 +25,10 @@ export function AppLayout() {
     navigate("/acesso", { replace: true });
   };
 
+  const handleGoToAdmin = () => {
+    navigate("/admin");
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="border-b bg-white">
@@ -43,7 +47,7 @@ export function AppLayout() {
             </div>
 
             {user && (
-              <div className="flex items-center justify-between gap-3 sm:justify-end sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <div className="flex min-w-0 items-center gap-2 text-sm text-slate-600">
                   <User className="h-4 w-4 shrink-0" />
                   <div className="min-w-0 leading-tight">
@@ -53,15 +57,31 @@ export function AppLayout() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
-                  aria-label="Sair"
-                  title="Sair"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-2">
+
+                  {(user.level === "ADMIN" || user.level === "COORDINATOR") && (
+                    <button
+                      type="button"
+                      onClick={handleGoToAdmin}
+                      className="flex cursor-pointer items-center justify-center rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
+                      aria-label="Administração"
+                      title="Administração"
+                    >
+                      <Shield className="h-4 w-4" />
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex cursor-pointer items-center justify-center rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
+                    aria-label="Sair"
+                    title="Sair"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+
+                </div>
               </div>
             )}
           </div>

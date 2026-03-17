@@ -1,12 +1,13 @@
-export type AuthUser = {
+export type UserLevel = "ADMIN" | "COORDINATOR" | "MEMBER";
+
+export interface AuthUser {
   id: string;
   name: string;
-  city: string;
   email: string;
-  phone: string;
-  active: boolean;
-  level: string;
-};
+  city?: string;
+  phone?: string;
+  level: UserLevel;
+}
 
 export type AuthSession = {
   expiresAt: string | null;
