@@ -1,11 +1,13 @@
+import type { UserLevel } from "@/types/users";
+
 export type SafeUser = {
   id: string;
   name: string;
-  city: string;
   email: string;
+  city: string;
   phone: string;
   active: boolean;
-  level: string;
+  level: UserLevel;
 };
 
 export type AuthSession = {
@@ -53,6 +55,7 @@ export type ValidateAccessResponse = {
 
 export type RegisterRequestInput = {
   name: string;
+  state: string;
   city: string;
   email: string;
   phone: string;

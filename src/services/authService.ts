@@ -29,6 +29,7 @@ export const authService = {
   ): Promise<RegisterRequestResponse> {
     return api.post("/auth/register-request", {
       name: input.name.trim(),
+      state: input.state.trim(),
       city: input.city.trim(),
       email: input.email.trim().toLowerCase(),
       phone: input.phone.replace(/\D/g, ""),

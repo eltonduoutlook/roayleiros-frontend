@@ -1,4 +1,4 @@
-export type UserLevel = "admin" | "manager" | "user";
+export type UserLevel = "ADMIN" | "COORDINATOR" | "MEMBER";
 
 export type UserItem = {
   id: string;

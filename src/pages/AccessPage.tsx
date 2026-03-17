@@ -485,18 +485,14 @@ export default function AccessPage() {
             </div>
           )}
 
-          {!codeRequested && (
+          {!codeRequested && !emailNotFound && (
             <button
               type="button"
               onClick={handleRequestAccess}
               disabled={loading || !email.trim()}
               className="w-full cursor-pointer rounded-xl bg-blue-600 py-3 font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading
-                ? "Carregando..."
-                : emailNotFound
-                  ? "Solicitar cadastro"
-                  : "Solicitar acesso"}
+              {loading ? "Carregando..." : "Solicitar acesso"}
             </button>
           )}
 

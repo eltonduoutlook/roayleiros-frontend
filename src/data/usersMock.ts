@@ -8,7 +8,7 @@ export const usersMock: UserItem[] = [
     email: "elton.du@gmail.com",
     phone: "(11) 93231-5454",
     active: true,
-    level: "admin",
+    level: "ADMIN",
     accessCode: 315454,
   },
   {
@@ -18,7 +18,7 @@ export const usersMock: UserItem[] = [
       email: "maria@email.com",
       phone: "(11) 98888-2222",
       active: true,
-      level: "manager",
+      level: "COORDINATOR",
       accessCode: 123,
   },
   {
@@ -28,7 +28,7 @@ export const usersMock: UserItem[] = [
       email: "joao@email.com",
       phone: "(11) 97777-3333",
       active: false,
-      level: "user",
+      level: "MEMBER",
       accessCode: 123,
   },
 ];
