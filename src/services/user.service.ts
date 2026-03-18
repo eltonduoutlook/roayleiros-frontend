@@ -1,25 +1,34 @@
 import type { EligibleCoordinator } from "@/types/users";
 import { api } from "./api";
 
-export const userService = {
-    async listEligibleCoordinators(search: string): Promise<EligibleCoordinator[]> {
-        const term = search.trim();
+type ListEligibleCoordinatorsParams = {
+    search?: string;
+    page?: number;
+    pageSize?: number;
+};
 
-        if (!term) {
-            return [];
+export const userService = {
+    async listEligibleCoordinators(
+        params: ListEligibleCoordinatorsParams = {},
+    ): Promise<EligibleCoordinator[]> {
+        const searchParams = new URLSearchParams();
+
+        if (params.search?.trim()) {
+            searchParams.set("search", params.search.trim());
         }
 
-        const searchParams = new URLSearchParams({
-            search: term,
-        });
+        if (params.page) {
+            searchParams.set("page", String(params.page));
+        }
+
+        if (params.pageSize) {
+            searchParams.set("pageSize", String(params.pageSize));
+        }
+
+        const query = searchParams.toString();
 
         return api.get<EligibleCoordinator[]>(
-            `/users/eligible-coordinators?${searchParams.toString()}`,
+            `/admin/units/coordinators/users${query ? `?${query}` : ""}`,
         );
     },
-
-    async searchEligibleCoordinators(search: string): Promise<EligibleCoordinator[]> {
-        const query = new URLSearchParams({ search }).toString();
-        return api.get<EligibleCoordinator[]>(`/users/eligible-coordinators?${query}`);
-    }
 };

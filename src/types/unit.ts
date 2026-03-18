@@ -1,22 +1,30 @@
 import type { UserSummary } from "./users";
 
-export type Unit = {
-  id: string;
-  name: string;
-  state?: string | null;
-  city?: string | null;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-  coordinators: UserSummary[];
+export type UnitLocation = {
+  state: string;
+  city: string;
+};
+
+export type UnitLocationPayload = {
+  state: string;
+  city: string;
 };
 
 export type UnitPayload = {
   name: string;
-  state?: string;
-  city?: string;
-  active?: boolean;
+  active: boolean;
   coordinatorIds: string[];
+  locations: UnitLocationPayload[];
+};
+
+export type Unit = {
+  id: string;
+  name: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  coordinatorIds?: string[];
+  locations: UnitLocation[];
 };
 
 export type UnitListResponse = {

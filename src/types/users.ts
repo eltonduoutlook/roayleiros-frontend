@@ -13,15 +13,9 @@ export type EligibleCoordinator = {
   email: string;
   phone?: string | null;
   city?: string | null;
+  state?: string | null;
+  active: boolean;
   level: Extract<UserLevel, "ADMIN" | "COORDINATOR">;
 };
 
 export type CoordinatorOption = EligibleCoordinator;
-
-export type CoordinatorOptionsResponse = {
-  data: CoordinatorOption[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-};
