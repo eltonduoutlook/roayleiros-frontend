@@ -205,15 +205,15 @@ export default function EventDetailPage() {
 
           <div className="grid gap-6 text-sm md:grid-cols-1">
             <div className="space-y-2">
-              <p className="font-medium text-slate-900">Expansão</p>
+              <p className="font-medium text-slate-900">Unidade</p>
               <p className="flex items-center gap-2 text-slate-500">
                 <Building2 className="h-4 w-4" />
                 {loadingUnits ? (
-                  <span className="text-slate-400">Carregando expansão...</span>
+                  <span className="text-slate-400">Carregando unidade...</span>
                 ) : unit ? (
                   unit.city ? `${unit.name} — ${unit.city}` : unit.name
                 ) : (
-                  "Expansão não encontrada"
+                  "Unidade não encontrada"
                 )}
               </p>
             </div>

@@ -1,5 +1,5 @@
 import type React from "react";
-import { Heart } from "lucide-react";
+import { Heart, LayoutGrid } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { AdminFeature } from "@/data/adminFeatures";
 
@@ -17,7 +17,7 @@ export function AdminFeatureCard({
   statLabel,
 }: AdminFeatureCardProps) {
   const navigate = useNavigate();
-  const Icon = feature.icon;
+  const Icon = feature.icon ?? LayoutGrid;
 
   const handleNavigate = () => {
     if (!feature.enabled) return;

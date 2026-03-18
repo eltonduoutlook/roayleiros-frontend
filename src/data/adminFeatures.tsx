@@ -1,6 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import {
+    BuildingIcon,
     CalendarDays,
+    ClipboardCheck,
     FileText,
     LayoutGrid,
     MapPin,
@@ -20,7 +22,7 @@ export interface AdminFeature {
     title: string;
     description: string;
     route: string;
-    icon: LucideIcon;
+    icon?: LucideIcon;
     allowedLevels: UserLevel[];
     enabled: boolean;
     category: AdminFeatureCategory;
@@ -68,16 +70,6 @@ export const adminFeatures: AdminFeature[] = [
         category: "Pessoas",
     },
     {
-        key: "unidades",
-        title: "Unidades",
-        description: "Cadastro e manutenção das unidades",
-        route: "/admin/unidades",
-        icon: MapPin,
-        allowedLevels: ["ADMIN"],
-        enabled: false,
-        category: "Configurações",
-    },
-    {
         key: "permissoes",
         title: "Permissões",
         description: "Controle de níveis e acessos",
@@ -85,6 +77,26 @@ export const adminFeatures: AdminFeature[] = [
         icon: ShieldCheck,
         allowedLevels: ["ADMIN"],
         enabled: false,
+        category: "Configurações",
+    },
+    {
+        key: "unit-create",
+        title: "Nova unidade",
+        description: "Cadastrar uma nova unidade.",
+        route: "/admin/unidades/nova",
+        allowedLevels: ["ADMIN"],
+        icon: BuildingIcon,
+        enabled: true,
+        category: "Configurações",
+    },
+    {
+        key: "units-manage",
+        title: "Unidades",
+        description: "Gerenciar cadastro e manutenção das unidades.",
+        route: "/admin/unidades",
+        allowedLevels: ["ADMIN"],
+        icon: ClipboardCheck,
+        enabled: true,
         category: "Configurações",
     },
 ];

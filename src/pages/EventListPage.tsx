@@ -53,7 +53,7 @@ export default function EventListPage() {
   const selectedUnitName = unitsMap.get(String(unitId)) ?? "";
 
   const emptyMessage = selectedUnitName
-    ? `Nenhum evento encontrado no dia ${formatDateBR(safeDate)} para a expansão ${selectedUnitName}.`
+    ? `Nenhum evento encontrado no dia ${formatDateBR(safeDate)} para a unidade ${selectedUnitName}.`
     : `Nenhum evento encontrado no dia ${formatDateBR(safeDate)}.`;
 
   if (isInvalidDate) {
@@ -104,7 +104,7 @@ export default function EventListPage() {
               key={event.id}
               title={event.title}
               time={event.time}
-              unitName={`Expansão: ${unitsMap.get(String(event.unitId)) ?? "não encontrada"}`}
+              unitName={`Unidade: ${unitsMap.get(String(event.unitId)) ?? "não encontrada"}`}
               location={`Destino: ${event.location}`}
               description={event.description}
               onClick={() => navigate(`/evento/${event.id}`)}

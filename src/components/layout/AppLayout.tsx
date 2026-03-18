@@ -2,6 +2,8 @@ import { CalendarDays, LogOut, Shield, User } from "lucide-react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { authStorage, type AuthUser } from "@/lib/authStorage";
+import { ButtonsContainer } from "../ui/buttonsContainer";
+import { IconButton } from "../ui/iconButton";
 
 export function AppLayout() {
   const navigate = useNavigate();
@@ -57,31 +59,25 @@ export function AppLayout() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-
+                <ButtonsContainer>
                   {(user.level === "ADMIN" || user.level === "COORDINATOR") && (
-                    <button
-                      type="button"
+                    <IconButton
                       onClick={handleGoToAdmin}
-                      className="flex cursor-pointer items-center justify-center rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
                       aria-label="Administração"
                       title="Administração"
                     >
                       <Shield className="h-4 w-4" />
-                    </button>
+                    </IconButton>
                   )}
 
-                  <button
-                    type="button"
+                  <IconButton
                     onClick={handleLogout}
-                    className="flex cursor-pointer items-center justify-center rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
                     aria-label="Sair"
                     title="Sair"
                   >
                     <LogOut className="h-4 w-4" />
-                  </button>
-
-                </div>
+                  </IconButton>
+                </ButtonsContainer>
               </div>
             )}
           </div>

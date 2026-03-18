@@ -9,6 +9,7 @@ import EventListPage from "@/pages/EventListPage";
 import EventDetailPage from "@/pages/EventDetailPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import RequestRegistrationPage from "@/pages/RequestRegistrationPage";
+import UnitRegistrationPage from "@/pages/AdminUnitCreatePage";
 import AdminRegisterRequestsPage from "@/pages/AdminRegisterRequestsPage";
 import AdminHome from "@/pages/AdminHome";
 
@@ -50,6 +51,14 @@ export const router = createBrowserRouter([
         element: (
           <RoleRoute allowedLevels={["ADMIN"]}>
             <AdminRegisterRequestsPage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "admin/unidades/nova",
+        element: (
+          <RoleRoute allowedLevels={["ADMIN", "COORDINATOR"]}>
+            <UnitRegistrationPage />
           </RoleRoute>
         ),
       },

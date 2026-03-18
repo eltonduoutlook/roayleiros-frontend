@@ -13,7 +13,7 @@ export function UnitFilter({ units, value, onChange }: UnitFilterProps) {
         htmlFor="unit-filter"
         className="mb-2 block text-sm font-medium text-slate-700"
       >
-        Filtrar por expansão
+        Filtrar por unidade
       </label>
 
       <select
@@ -22,7 +22,7 @@ export function UnitFilter({ units, value, onChange }: UnitFilterProps) {
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 transition-colors outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
       >
-        <option value="">Todas as expansões</option>
+        <option value="">Todas as unidades</option>
 
         {units.map((unit) => (
           <option key={unit.id} value={unit.id}>

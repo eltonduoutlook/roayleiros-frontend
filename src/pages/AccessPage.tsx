@@ -34,6 +34,7 @@ export default function AccessPage() {
 
   const isAuthenticated = authStorage.isAuthenticated();
   const emailNotFound = errorCode === "USER_NOT_FOUND";
+  const pendingApproval = errorCode === "PENDING_APPROVAL";
 
   useEffect(() => {
     if (!codeRequested || resendCountdown <= 0) return;
@@ -138,6 +139,22 @@ export default function AccessPage() {
     );
   }
 
+  function isPendingApprovalError(message: string, code: string | null) {
+    const normalized = message.toLowerCase();
+
+    return (
+      code === "PENDING_APPROVAL" ||
+      code === "REGISTER_REQUEST_PENDING" ||
+      code === "REQUEST_PENDING" ||
+      normalized.includes("aguardando aprovação") ||
+      normalized.includes("aguardando aprovacao") ||
+      normalized.includes("cadastro pendente") ||
+      normalized.includes("solicitação pendente") ||
+      normalized.includes("solicitacao pendente") ||
+      normalized.includes("pending")
+    );
+  }
+
   function fillOtpFromString(rawValue: string) {
     const digits = rawValue.replace(/\D/g, "").slice(0, OTP_LENGTH);
     if (!digits) return;
@@ -188,9 +205,19 @@ export default function AccessPage() {
     } catch (error) {
       const { message, code } = getErrorDetails(error);
       const notFound = isUserNotFoundError(message, code);
+      const pending = isPendingApprovalError(message, code);
 
-      setMessage(message);
-      setErrorCode(notFound ? "USER_NOT_FOUND" : code);
+      if (pending) {
+        setMessage("Seu cadastro já foi solicitado e está aguardando aprovação.");
+        setErrorCode("PENDING_APPROVAL");
+      } else if (notFound) {
+        setMessage(message);
+        setErrorCode("USER_NOT_FOUND");
+      } else {
+        setMessage(message);
+        setErrorCode(code);
+      }
+
       setCodeRequested(false);
     } finally {
       setLoading(false);
@@ -225,8 +252,16 @@ export default function AccessPage() {
       }, 0);
     } catch (error) {
       const { message, code } = getErrorDetails(error);
-      setMessage(message);
-      setErrorCode(code);
+      const pending = isPendingApprovalError(message, code);
+
+      if (pending) {
+        setMessage("Seu cadastro já foi solicitado e está aguardando aprovação.");
+        setErrorCode("PENDING_APPROVAL");
+        setCodeRequested(false);
+      } else {
+        setMessage(message);
+        setErrorCode(code);
+      }
     } finally {
       setLoading(false);
     }
@@ -438,6 +473,13 @@ export default function AccessPage() {
                 <span>E-mail não encontrado.</span>
               </div>
             )}
+
+            {pendingApproval && !codeRequested && (
+              <div className="mt-3 flex w-full items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700">
+                <AlertTriangle className="h-4 w-4" />
+                <span>Seu cadastro está aguardando aprovação.</span>
+              </div>
+            )}
           </div>
 
           {codeRequested && (
@@ -485,7 +527,7 @@ export default function AccessPage() {
             </div>
           )}
 
-          {!codeRequested && !emailNotFound && (
+          {!codeRequested && !emailNotFound && !pendingApproval && (
             <button
               type="button"
               onClick={handleRequestAccess}
@@ -506,13 +548,13 @@ export default function AccessPage() {
             </button>
           )}
 
-          {!codeRequested && !emailNotFound && (
+          {!codeRequested && !emailNotFound && !pendingApproval && (
             <p className="mt-2 text-sm italic text-slate-600">
               *Necessário estar cadastrado!
             </p>
           )}
 
-          {message && !emailNotFound && (
+          {message && !emailNotFound && !pendingApproval && (
             <div className="rounded-xl bg-slate-100 px-3 py-2.5 text-sm text-slate-700">
               {message}
             </div>
