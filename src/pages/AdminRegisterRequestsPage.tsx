@@ -16,13 +16,13 @@ import { buildRegisterRequestsColumns, RegisterRequestRow } from "@/features/adm
 import type { UserLevel } from "@/services/admin.service";
 
 type AuthUser = {
-  id: string;
-  name: string;
-  city: string;
-  email: string;
-  phone: string;
-  active: boolean;
-  level: UserLevel;
+    id: string;
+    name: string;
+    city: string;
+    email: string;
+    phone: string;
+    active: boolean;
+    level: UserLevel;
 };
 
 export default function AdminRegisterRequestsPage() {
@@ -149,6 +149,9 @@ export default function AdminRegisterRequestsPage() {
                             data={data}
                             emptyMessage="Nenhuma solicitação encontrada."
                             onRowClick={(row) => {
+                                const canEdit = row.status === "PENDING" || row.status === "REJECTED";
+                                if (!canEdit) return;
+
                                 setSelectedRequest(row);
                             }}
                         />

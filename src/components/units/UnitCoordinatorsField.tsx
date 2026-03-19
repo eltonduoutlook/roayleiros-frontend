@@ -1,7 +1,5 @@
-import { useMemo, useState } from "react";
-import type { KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { unitService } from "@/services/unit.service";
 import type { EligibleCoordinator } from "@/types/users";
@@ -14,6 +12,34 @@ type UnitCoordinatorsFieldProps = {
     disabled?: boolean;
 };
 
+function onlyDigits(value: string) {
+    return value.replace(/\D/g, "");
+}
+
+function normalizeText(value: string) {
+    return value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+}
+
+function formatPhone(value?: string | null) {
+    if (!value) return "Sem telefone";
+
+    const digits = onlyDigits(value);
+
+    if (digits.length === 11) {
+        return digits.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+    }
+
+    if (digits.length === 10) {
+        return digits.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+    }
+
+    return value;
+}
+
 export function UnitCoordinatorsField({
     value,
     onChange,
@@ -25,6 +51,10 @@ export function UnitCoordinatorsField({
     const [search, setSearch] = useState("");
     const [results, setResults] = useState<EligibleCoordinator[]>([]);
     const [loading, setLoading] = useState(false);
+    const [openResults, setOpenResults] = useState(false);
+
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const debounceRef = useRef<number | null>(null);
 
     const effectiveSelectedCoordinators =
         selectedCoordinators ?? internalSelectedCoordinators;
@@ -42,33 +72,90 @@ export function UnitCoordinatorsField({
         const safeResults = Array.isArray(results) ? results : [];
         const selectedIds = new Set(value);
 
-        return safeResults.filter((item) => !selectedIds.has(item.id));
+        return safeResults
+            .filter((item) => !selectedIds.has(item.id))
+            .slice(0, 10);
     }, [results, value]);
 
-    async function handleSearch() {
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (!containerRef.current) return;
+
+            if (!containerRef.current.contains(event.target as Node)) {
+                setOpenResults(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        if (disabled) {
+            setResults([]);
+            setOpenResults(false);
+            return;
+        }
+
         const normalizedSearch = search.trim();
 
         if (!normalizedSearch) {
             setResults([]);
+            setOpenResults(false);
             return;
         }
 
-        try {
-            setLoading(true);
-
-            const response = await unitService.listCoordinatorUsers({
-                search: normalizedSearch,
-                page: 1,
-                pageSize: 10,
-            });
-
-            setResults(Array.isArray(response.items) ? response.items : []);
-        } catch {
-            setResults([]);
-        } finally {
-            setLoading(false);
+        if (debounceRef.current) {
+            window.clearTimeout(debounceRef.current);
         }
-    }
+
+        debounceRef.current = window.setTimeout(async () => {
+            try {
+                setLoading(true);
+
+                const response = await unitService.listCoordinatorUsers({
+                    search: normalizedSearch,
+                    page: 1,
+                    pageSize: 10,
+                });
+
+                const items = Array.isArray(response.items) ? response.items : [];
+                const normalizedQuery = normalizeText(normalizedSearch);
+                const digitsQuery = onlyDigits(normalizedSearch);
+
+                const refinedItems = items.filter((item) => {
+                    const text = normalizeText(
+                        [item.name, item.email, item.phone, item.city]
+                            .filter(Boolean)
+                            .join(" "),
+                    );
+
+                    const phoneDigits = onlyDigits(item.phone || "");
+
+                    const matchesText = text.includes(normalizedQuery);
+                    const matchesPhone = digitsQuery
+                        ? phoneDigits.includes(digitsQuery)
+                        : false;
+
+                    return matchesText || matchesPhone;
+                });
+
+                setResults(refinedItems.slice(0, 10));
+                setOpenResults(true);
+            } catch {
+                setResults([]);
+                setOpenResults(true);
+            } finally {
+                setLoading(false);
+            }
+        }, 300);
+
+        return () => {
+            if (debounceRef.current) {
+                window.clearTimeout(debounceRef.current);
+            }
+        };
+    }, [search, disabled]);
 
     function handleAddCoordinator(item: EligibleCoordinator) {
         if (value.includes(item.id)) return;
@@ -77,37 +164,33 @@ export function UnitCoordinatorsField({
         setEffectiveSelectedCoordinators([...effectiveSelectedCoordinators, item]);
         setResults([]);
         setSearch("");
-    }
-
-    function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-        if (event.key !== "Enter") return;
-        event.preventDefault();
-        void handleSearch();
+        setOpenResults(false);
     }
 
     return (
-        <div className="space-y-4">
-            <div className="space-y-2">
-                <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    onKeyDown={handleSearchKeyDown}
-                    placeholder="Buscar coordenador por nome, e-mail, telefone ou cidade"
-                    disabled={disabled || loading}
-                />
+        <div ref={containerRef} className="relative space-y-2">
+            <Input
+                value={search}
+                onChange={(event) => {
+                    setSearch(event.target.value);
+                    setOpenResults(true);
+                }}
+                onFocus={() => {
+                    if (search.trim()) {
+                        setOpenResults(true);
+                    }
+                }}
+                placeholder="Buscar coordenador por nome, e-mail, telefone ou cidade"
+                disabled={disabled}
+            />
 
-                <Button
-                    type="button"
-                    onClick={() => void handleSearch()}
-                    disabled={disabled || loading || !search.trim()}
-                >
-                    {loading ? "Buscando..." : "Buscar coordenador"}
-                </Button>
-            </div>
-
-            {search.trim() && (
-                <div className="rounded-xl border border-slate-200">
-                    {filteredResults.length === 0 ? (
+            {openResults && search.trim() && (
+                <div className="absolute z-20 w-full rounded-xl border border-slate-200 bg-white shadow-sm">
+                    {loading ? (
+                        <div className="px-4 py-3 text-sm text-slate-500">
+                            Buscando...
+                        </div>
+                    ) : filteredResults.length === 0 ? (
                         <div className="px-4 py-3 text-sm text-slate-500">
                             Nenhum coordenador encontrado.
                         </div>
@@ -131,7 +214,7 @@ export function UnitCoordinatorsField({
                                         </div>
 
                                         <div className="text-xs text-slate-500">
-                                            {[item.phone || "Sem telefone", item.city || "Sem cidade"]
+                                            {[formatPhone(item.phone), item.city || "Sem cidade"]
                                                 .filter(Boolean)
                                                 .join(" • ")}
                                         </div>

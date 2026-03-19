@@ -3,6 +3,8 @@ import { CheckCircle2, Clock3, Pencil, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { AdminRegisterRequestItem } from "@/services/admin.service";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatPhone } from "@/lib/utils";
 
 export type RegisterRequestRow = AdminRegisterRequestItem;
 
@@ -19,7 +21,10 @@ function getStatusBadge(status: string) {
     switch (status) {
         case "PENDING":
             return (
-                <Badge variant="secondary" className="gap-1">
+                <Badge
+                    variant="outline"
+                    className="gap-1 border-yellow-300 text-yellow-700 bg-yellow-50"
+                >
                     <Clock3 className="h-3.5 w-3.5" />
                     Pendente
                 </Badge>
@@ -27,7 +32,9 @@ function getStatusBadge(status: string) {
 
         case "APPROVED":
             return (
-                <Badge className="gap-1">
+                <Badge
+                    className="gap-1 bg-green-600 text-white hover:bg-green-600"
+                >
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Aprovado
                 </Badge>
@@ -35,7 +42,9 @@ function getStatusBadge(status: string) {
 
         case "REJECTED":
             return (
-                <Badge variant="destructive" className="gap-1">
+                <Badge
+                    className="gap-1 bg-red-600 text-white hover:bg-red-600"
+                >
                     <XCircle className="h-3.5 w-3.5" />
                     Rejeitado
                 </Badge>
@@ -59,7 +68,6 @@ export function buildRegisterRequestsColumns({
             header: "Nome",
             cell: ({ row }) => {
                 const item = row.original;
-
                 return (
                     <div className="min-w-[220px]">
                         <div className="font-medium">{item.name}</div>
@@ -76,7 +84,7 @@ export function buildRegisterRequestsColumns({
         {
             accessorKey: "phone",
             header: "Telefone",
-            cell: ({ row }) => row.original.phone || "—",
+            cell: ({ row }) => formatPhone(row.original.phone) || "—",
         },
         {
             accessorKey: "status",
@@ -89,11 +97,26 @@ export function buildRegisterRequestsColumns({
         },
         {
             accessorKey: "approvedLevel",
-            header: "Tipo de Usuário",
+            header: () => (
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <span className="cursor-help">
+                            Tipo de Usuário
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        Tipo de usuário selecionado no momento da aprovação!
+                    </TooltipContent>
+                </Tooltip>
+            ),
             cell: ({ row }) => (
-                <div className="flex flex-wrap gap-2">
+                <div
+                    title="Tipo de usuário selecionado no momento da aprovação!"
+                    className="flex flex-wrap gap-2">
                     {row.original.approvedLevel ? (
-                        <Badge variant="outline">{row.original.approvedLevel}</Badge>
+                        <Badge variant="outline">
+                            {row.original.approvedLevel}
+                        </Badge>
                     ) : null}
                 </div>
             ),
@@ -111,21 +134,44 @@ export function buildRegisterRequestsColumns({
         {
             id: "actions",
             header: "Ações",
-            cell: ({ row }) => (
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        onEdit(row.original);
-                    }}
-                >
-                    <Pencil className="h-4 w-4" />
-                    Editar
-                </Button>
-            ),
-        },
+            cell: ({ row }) => {
+                const isApproved = row.original.status === "APPROVED";
+
+                return (
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <span>
+                                {/* span necessário porque button disabled não dispara tooltip */}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2"
+                                    disabled={isApproved}
+                                    onClick={(event) => {
+                                        event.stopPropagation();
+                                        if (!isApproved) {
+                                            onEdit(row.original);
+                                        }
+                                    }}
+                                >
+                                    <Pencil
+                                        className={`h-4 w-4 ${isApproved ? "opacity-50" : ""
+                                            }`}
+                                    />
+                                    Editar
+                                </Button>
+                            </span>
+                        </TooltipTrigger>
+
+                        {isApproved && (
+                            <TooltipContent>
+                                Solicitações aprovadas não podem ser editadas aqui.
+                            </TooltipContent>
+                        )}
+                    </Tooltip>
+                );
+            },
+        }
     ];
 }
