@@ -365,6 +365,11 @@ export function UnitEditModal({
         [allCoordinatorRows],
     );
 
+    const coordinatorFieldKey = useMemo(
+        () => [...coordinatorIds].sort().join("|"),
+        [coordinatorIds],
+    );
+
     async function handleSaveBase() {
         if (!unit) return;
 
@@ -973,14 +978,15 @@ export function UnitEditModal({
 
                                 <div className="rounded-xl border border-slate-200 p-5">
                                     <UnitCoordinatorsField
+                                        key={coordinatorFieldKey}
                                         value={coordinatorIds}
                                         onChange={(ids) => {
                                             void handleCoordinatorIdsChange(ids);
                                         }}
                                         selectedCoordinators={selectedCoordinators}
-                                        onSelectedCoordinatorsChange={(items) =>
-                                            setSelectedCoordinators(items)
-                                        }
+                                        onSelectedCoordinatorsChange={(items) => {
+                                            setSelectedCoordinators(items);
+                                        }}
                                         disabled={savingCoordinatorAction}
                                     />
 
