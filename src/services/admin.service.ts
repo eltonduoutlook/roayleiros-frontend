@@ -4,6 +4,7 @@ export type RegisterRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
 export interface AdminRegisterRequestItem {
   id: string;
   name: string;
+  state: string;
   city: string;
   email: string;
   phone: string;
@@ -20,6 +21,7 @@ export interface AdminRegisterRequestItem {
 export interface ApproveRegisterRequestPayload {
   approvedLevel: UserLevel;
   name?: string;
+  state?: string;
   city?: string;
   email?: string;
   phone?: string;

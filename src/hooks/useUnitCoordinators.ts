@@ -18,39 +18,100 @@ export function useUnitCoordinators(unitId?: string) {
             setLoading(true);
             setError(null);
 
-            const data = await unitService.getCoordinators(unitId);
+            const data = await unitService.listUnitCoordinators(unitId);
             setItems(data);
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
+            console.error(err);
             setError("Não foi possível carregar os coordenadores da unidade.");
         } finally {
             setLoading(false);
         }
     }, [unitId]);
 
-    const save = useCallback(
-        async (coordinatorIds: string[]) => {
-            if (!unitId) return [];
+    const addCoordinator = useCallback(
+        async (userId: string) => {
+            if (!unitId) return null;
 
             try {
                 setSaving(true);
                 setError(null);
 
-                const data = await unitService.updateCoordinators(unitId, {
-                    coordinatorIds,
+                const data = await unitService.addUnitCoordinator(unitId, { userId });
+
+                setItems((prev) => {
+                    const existingIndex = prev.findIndex(
+                        (item) => item.userId === data.userId,
+                    );
+
+                    if (existingIndex >= 0) {
+                        return prev.map((item, index) =>
+                            index === existingIndex ? data : item,
+                        );
+                    }
+
+                    return [...prev, data];
                 });
 
-                setItems(data);
                 return data;
-            } catch (error) {
-                console.error(error);
-                setError("Não foi possível salvar os coordenadores da unidade.");
-                throw error;
+            } catch (err) {
+                console.error(err);
+                setError("Não foi possível adicionar o coordenador à unidade.");
+                throw err;
             } finally {
                 setSaving(false);
             }
         },
-        [unitId]
+        [unitId],
+    );
+
+    const inactivateCoordinator = useCallback(
+        async (userId: string) => {
+            if (!unitId) return null;
+
+            try {
+                setSaving(true);
+                setError(null);
+
+                const data = await unitService.inactivateUnitCoordinator(unitId, userId);
+
+                setItems((prev) =>
+                    prev.map((item) => (item.userId === userId ? data : item)),
+                );
+
+                return data;
+            } catch (err) {
+                console.error(err);
+                setError("Não foi possível inativar o coordenador da unidade.");
+                throw err;
+            } finally {
+                setSaving(false);
+            }
+        },
+        [unitId],
+    );
+
+    const removeCoordinator = useCallback(
+        async (userId: string) => {
+            if (!unitId) return null;
+
+            try {
+                setSaving(true);
+                setError(null);
+
+                await unitService.removeUnitCoordinator(unitId, userId);
+
+                setItems((prev) => prev.filter((item) => item.userId !== userId));
+
+                return true;
+            } catch (err) {
+                console.error(err);
+                setError("Não foi possível remover o coordenador da unidade.");
+                throw err;
+            } finally {
+                setSaving(false);
+            }
+        },
+        [unitId],
     );
 
     useEffect(() => {
@@ -62,7 +123,9 @@ export function useUnitCoordinators(unitId?: string) {
         loading,
         saving,
         error,
-        save,
         refetch: fetchItems,
+        addCoordinator,
+        inactivateCoordinator,
+        removeCoordinator,
     };
 }

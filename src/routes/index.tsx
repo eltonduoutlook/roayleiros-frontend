@@ -9,9 +9,10 @@ import EventListPage from "@/pages/EventListPage";
 import EventDetailPage from "@/pages/EventDetailPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import RequestRegistrationPage from "@/pages/RequestRegistrationPage";
-import UnitRegistrationPage from "@/pages/AdminUnitCreatePage";
 import AdminRegisterRequestsPage from "@/pages/AdminRegisterRequestsPage";
 import AdminHome from "@/pages/AdminHome";
+import AdminUnitCreatePage from "@/pages/AdminUnitCreatePage";
+import AdminUnitsPage from "@/pages/AdminUnitsPage";
 
 const currentYear = new Date().getFullYear();
 
@@ -58,7 +59,15 @@ export const router = createBrowserRouter([
         path: "admin/unidades/nova",
         element: (
           <RoleRoute allowedLevels={["ADMIN", "COORDINATOR"]}>
-            <UnitRegistrationPage />
+            <AdminUnitCreatePage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: "admin/unidades",
+        element: (
+          <RoleRoute allowedLevels={["ADMIN", "COORDINATOR"]}>
+            <AdminUnitsPage />
           </RoleRoute>
         ),
       },

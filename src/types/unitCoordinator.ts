@@ -9,7 +9,3 @@ export type UnitCoordinatorItem = {
   updatedAt: string;
   user: CoordinatorOption;
 };
-
-export type UpdateUnitCoordinatorsPayload = {
-  coordinatorIds: string[];
-};

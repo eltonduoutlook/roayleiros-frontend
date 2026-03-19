@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { Plus, X } from "lucide-react";
+import type { KeyboardEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEligibleCoordinators } from "@/hooks/useEligibleCoordinators";
+import { unitService } from "@/services/unit.service";
 import type { EligibleCoordinator } from "@/types/users";
 
 type UnitCoordinatorsFieldProps = {
@@ -17,144 +17,135 @@ type UnitCoordinatorsFieldProps = {
 export function UnitCoordinatorsField({
     value,
     onChange,
-    selectedCoordinators = [],
+    selectedCoordinators,
     onSelectedCoordinatorsChange,
     disabled = false,
 }: UnitCoordinatorsFieldProps) {
+    const [internalSelectedCoordinators, setInternalSelectedCoordinators] = useState<EligibleCoordinator[]>([]);
     const [search, setSearch] = useState("");
+    const [results, setResults] = useState<EligibleCoordinator[]>([]);
+    const [loading, setLoading] = useState(false);
 
-    const { items = [], loading, error } = useEligibleCoordinators(search);
+    const effectiveSelectedCoordinators =
+        selectedCoordinators ?? internalSelectedCoordinators;
 
-    const selectedIds = useMemo(() => new Set(value ?? []), [value]);
+    const setEffectiveSelectedCoordinators = (items: EligibleCoordinator[]) => {
+        if (onSelectedCoordinatorsChange) {
+            onSelectedCoordinatorsChange(items);
+            return;
+        }
 
-    const availableResults = useMemo(() => {
-        return (items ?? []).filter((item) => !selectedIds.has(item.id));
-    }, [items, selectedIds]);
+        setInternalSelectedCoordinators(items);
+    };
+
+    const filteredResults = useMemo(() => {
+        const safeResults = Array.isArray(results) ? results : [];
+        const selectedIds = new Set(value);
+
+        return safeResults.filter((item) => !selectedIds.has(item.id));
+    }, [results, value]);
+
+    async function handleSearch() {
+        const normalizedSearch = search.trim();
+
+        if (!normalizedSearch) {
+            setResults([]);
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            const response = await unitService.listCoordinatorUsers({
+                search: normalizedSearch,
+                page: 1,
+                pageSize: 10,
+            });
+
+            setResults(Array.isArray(response.items) ? response.items : []);
+        } catch {
+            setResults([]);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     function handleAddCoordinator(item: EligibleCoordinator) {
-        if (selectedIds.has(item.id)) return;
+        if (value.includes(item.id)) return;
 
         onChange([...value, item.id]);
-        onSelectedCoordinatorsChange?.([...selectedCoordinators, item]);
+        setEffectiveSelectedCoordinators([...effectiveSelectedCoordinators, item]);
+        setResults([]);
         setSearch("");
     }
 
-    function handleRemoveCoordinator(userId: string) {
-        onChange(value.filter((id) => id !== userId));
-        onSelectedCoordinatorsChange?.(
-            selectedCoordinators.filter((item) => item.id !== userId),
-        );
+    function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        void handleSearch();
     }
 
     return (
         <div className="space-y-4">
             <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">
-                    Coordenadores da unidade
-                </label>
-
                 <Input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar por nome ou e-mail"
-                    disabled={disabled}
+                    onKeyDown={handleSearchKeyDown}
+                    placeholder="Buscar coordenador por nome, e-mail, telefone ou cidade"
+                    disabled={disabled || loading}
                 />
 
-                {error && (
-                    <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                        {error}
-                    </div>
-                )}
-
-                {(search.trim().length > 0 || loading) && (
-                    <div className="rounded-lg border border-slate-200 bg-white">
-                        {loading ? (
-                            <div className="px-3 py-3 text-sm text-slate-500">Carregando...</div>
-                        ) : availableResults.length === 0 ? (
-                            <div className="px-3 py-3 text-sm text-slate-500">
-                                Nenhum usuário elegível encontrado.
-                            </div>
-                        ) : (
-                            <ul className="divide-y divide-slate-100">
-                                {availableResults.map((item) => (
-                                    <li key={item.id}>
-                                        <div className="flex items-center gap-3 px-3 py-2 transition-colors hover:bg-slate-50">
-                                            <Button
-                                                type="button"
-                                                size="icon"
-                                                variant="ghost"
-                                                onClick={() => handleAddCoordinator(item)}
-                                                disabled={disabled}
-                                                aria-label={`Adicionar ${item.name}`}
-                                                title={`Adicionar ${item.name}`}
-                                            >
-                                                <Plus className="h-4 w-4" />
-                                            </Button>
-
-                                            <div className="min-w-0 flex-1">
-                                                <div className="text-sm font-medium text-slate-800">
-                                                    {item.name}
-                                                </div>
-                                                <div className="truncate text-xs text-slate-500">
-                                                    {item.email}
-                                                    {item.city ? ` • ${item.city}` : ""}
-                                                    {item.phone ? ` • ${item.phone}` : ""}
-                                                    {item.level ? ` • ${item.level}` : ""}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-                )}
+                <Button
+                    type="button"
+                    onClick={() => void handleSearch()}
+                    disabled={disabled || loading || !search.trim()}
+                >
+                    {loading ? "Buscando..." : "Buscar coordenador"}
+                </Button>
             </div>
 
-            <div className="space-y-2">
-                <div className="text-sm font-medium text-slate-700">
-                    Selecionados ({selectedCoordinators.length})
-                </div>
-
-                {selectedCoordinators.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-slate-300 px-3 py-4 text-sm text-slate-500">
-                        Nenhum coordenador selecionado.
-                    </div>
-                ) : (
-                    <div className="space-y-2">
-                        {selectedCoordinators.map((item) => (
-                            <div
-                                key={item.id}
-                                className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
-                            >
-                                <div className="min-w-0">
-                                    <div className="text-sm font-medium text-slate-800">
-                                        {item.name}
-                                    </div>
-                                    <div className="truncate text-xs text-slate-500">
-                                        {item.email}
-                                        {item.city ? ` • ${item.city}` : ""}
-                                        {item.phone ? ` • ${item.phone}` : ""}
-                                        {item.level ? ` • ${item.level}` : ""}
-                                    </div>
-                                </div>
-
-                                <Button
+            {search.trim() && (
+                <div className="rounded-xl border border-slate-200">
+                    {filteredResults.length === 0 ? (
+                        <div className="px-4 py-3 text-sm text-slate-500">
+                            Nenhum coordenador encontrado.
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-slate-200">
+                            {filteredResults.map((item) => (
+                                <button
+                                    key={item.id}
                                     type="button"
-                                    size="icon"
-                                    variant="ghost"
+                                    onClick={() => handleAddCoordinator(item)}
                                     disabled={disabled}
-                                    onClick={() => handleRemoveCoordinator(item.id)}
-                                    aria-label={`Remover ${item.name}`}
-                                    title={`Remover ${item.name}`}
+                                    className="flex w-full items-center justify-between px-4 py-3 text-left transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    <X className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                                    <div className="min-w-0">
+                                        <div className="font-medium text-slate-900">
+                                            {item.name}
+                                        </div>
+
+                                        <div className="truncate text-sm text-slate-600">
+                                            {item.email || "Sem e-mail"}
+                                        </div>
+
+                                        <div className="text-xs text-slate-500">
+                                            {[item.phone || "Sem telefone", item.city || "Sem cidade"]
+                                                .filter(Boolean)
+                                                .join(" • ")}
+                                        </div>
+                                    </div>
+
+                                    <span className="ml-4 shrink-0 text-sm font-medium text-blue-600">
+                                        Selecionar
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

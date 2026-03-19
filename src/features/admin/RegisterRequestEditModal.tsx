@@ -27,6 +27,7 @@ import {
 } from "@/services/admin.service";
 import type { RegisterRequestRow } from "@/features/admin/RegisterRequestsColumns";
 import { formatPhone } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 type Props = {
     open: boolean;
@@ -38,6 +39,7 @@ type Props = {
 
 type FormState = {
     name: string;
+    state: string;
     city: string;
     email: string;
     phone: string;
@@ -47,6 +49,7 @@ type FormState = {
 
 const DEFAULT_FORM: FormState = {
     name: "",
+    state: "",
     city: "",
     email: "",
     phone: "",
@@ -97,9 +100,10 @@ export function RegisterRequestEditModal({
 
         setForm({
             name: request.name ?? "",
+            state: request.state ?? "",
             city: request.city ?? "",
             email: request.email ?? "",
-            phone: request.phone ?? "",
+            phone: formatPhone(request.phone ?? ""),
             approvedLevel: (request.approvedLevel as UserLevel | null) ?? "MEMBER",
             rejectionReason: request.rejectionReason ?? "",
         });
@@ -119,12 +123,12 @@ export function RegisterRequestEditModal({
     }, [currentUserLevel]);
 
     const isPending = request?.status === "PENDING";
-    const isApproved = request?.status === "APPROVED";
     const isRejected = request?.status === "REJECTED";
+    const isApproved = request?.status === "APPROVED";
     const isBusy = savingApprove || savingReject;
 
-    const canApprove = !!request && !isBusy && request.status !== "APPROVED";
-    const canReject = !!request && !isBusy && request.status !== "REJECTED";
+    const canApprove = !!request && !isBusy && !isApproved;
+    const canReject = !!request && !isBusy && !isApproved;
 
     function updateField<K extends keyof FormState>(field: K, value: FormState[K]) {
         setForm((prev) => ({ ...prev, [field]: value }));
@@ -146,9 +150,10 @@ export function RegisterRequestEditModal({
             await adminService.approveRegisterRequest(request.id, {
                 approvedLevel: form.approvedLevel,
                 name: form.name.trim(),
+                state: form.state.trim().toUpperCase(),
                 city: form.city.trim(),
                 email: form.email.trim(),
-                phone: form.phone.replace(/\D/g, ""),
+                phone: (request.phone ?? "").replace(/\D/g, ""),
             });
 
             await onSuccess();
@@ -224,8 +229,18 @@ export function RegisterRequestEditModal({
                                 <Input
                                     id="register-name"
                                     value={form.name}
-                                    onChange={(e) => updateField("name", e.target.value)}
-                                    disabled={isBusy}
+                                    readOnly
+                                    disabled
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="register-state">Estado</Label>
+                                <Input
+                                    id="register-state"
+                                    value={form.state}
+                                    readOnly
+                                    disabled
                                 />
                             </div>
 
@@ -234,19 +249,8 @@ export function RegisterRequestEditModal({
                                 <Input
                                     id="register-city"
                                     value={form.city}
-                                    onChange={(e) => updateField("city", e.target.value)}
-                                    disabled={isBusy}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="register-email">E-mail</Label>
-                                <Input
-                                    id="register-email"
-                                    type="email"
-                                    value={form.email}
-                                    onChange={(e) => updateField("email", e.target.value)}
-                                    disabled={isBusy}
+                                    readOnly
+                                    disabled
                                 />
                             </div>
 
@@ -255,9 +259,20 @@ export function RegisterRequestEditModal({
                                 <Input
                                     id="register-phone"
                                     value={form.phone}
-                                    onChange={(e) => updateField("phone", formatPhone(e.target.value))}
-                                    disabled={isBusy}
+                                    readOnly
+                                    disabled
                                     placeholder="(11) 31648-5555"
+                                />
+                            </div>
+
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="register-email">E-mail</Label>
+                                <Input
+                                    id="register-email"
+                                    type="email"
+                                    value={form.email}
+                                    readOnly
+                                    disabled
                                 />
                             </div>
                         </div>
@@ -267,8 +282,10 @@ export function RegisterRequestEditModal({
                                 <Label>Nível de acesso</Label>
                                 <Select
                                     value={form.approvedLevel}
-                                    onValueChange={(value) => updateField("approvedLevel", value as UserLevel)}
-                                    disabled={isBusy}
+                                    onValueChange={(value) =>
+                                        updateField("approvedLevel", value as UserLevel)
+                                    }
+                                    disabled={isBusy || isApproved}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Selecione o nível" />
@@ -305,7 +322,7 @@ export function RegisterRequestEditModal({
                                 value={form.rejectionReason}
                                 onChange={(e) => updateField("rejectionReason", e.target.value)}
                                 rows={4}
-                                disabled={isBusy}
+                                disabled={isBusy || isApproved}
                                 placeholder="Preencha apenas se for rejeitar a solicitação"
                             />
                         </div>
@@ -342,7 +359,7 @@ export function RegisterRequestEditModal({
                                     ) : (
                                         <>
                                             <XCircle className="mr-2 h-4 w-4" />
-                                            {request.status === "APPROVED" ? "Rejeitar" : "Rejeitar"}
+                                            Rejeitar
                                         </>
                                     )}
                                 </Button>
@@ -360,18 +377,26 @@ export function RegisterRequestEditModal({
                                     ) : (
                                         <>
                                             <CheckCircle2 className="mr-2 h-4 w-4" />
-                                            {request.status === "REJECTED" ? "Reaprovar" : "Aprovar"}
+                                            {isRejected ? "Aprovar" : "Aprovar"}
                                         </>
                                     )}
                                 </Button>
                             </div>
                         </DialogFooter>
 
-                        {isPending ? (
-                            <p className="text-xs text-muted-foreground">
+
+                        {isPending && (
+                            <Badge variant="secondary" className="text-xs p-4 w-full mt-4">
                                 Enquanto nenhuma ação for tomada, a solicitação continua pendente.
-                            </p>
-                        ) : null}
+                            </Badge>
+                        )}
+
+                        {isApproved && (
+                            <Badge className="bg-green-100 text-green-700 border-green-200 text-xs p-4 w-full mt-4">
+                                Solicitações aprovadas geram o usuário e passam a ser gerenciadas na tela de usuários.
+                            </Badge>
+                        )}
+
                     </div>
                 )}
             </DialogContent>

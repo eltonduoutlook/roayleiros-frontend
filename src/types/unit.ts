@@ -1,36 +1,45 @@
-import type { UserSummary } from "./users";
+import type { UnitCoordinatorItem } from "./unitCoordinator";
 
 export type UnitLocation = {
+  id: string;
+  unitId: string;
   state: string;
   city: string;
-};
-
-export type UnitLocationPayload = {
-  state: string;
-  city: string;
-};
-
-export type UnitPayload = {
-  name: string;
   active: boolean;
-  coordinatorIds: string[];
-  locations: UnitLocationPayload[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Unit = {
   id: string;
   name: string;
+  city: string;
   active: boolean;
   createdAt: string;
   updatedAt: string;
-  coordinatorIds?: string[];
   locations: UnitLocation[];
+  coordinators: UnitCoordinatorItem[];
+};
+
+export type CreateUnitPayload = {
+  name: string;
+  active: boolean;
+  coordinatorIds: string[];
+  locations: Array<{
+    state: string;
+    city: string;
+  }>;
+};
+
+export type UpdateUnitPayload = {
+  name: string;
+  active: boolean;
 };
 
 export type UnitListResponse = {
   items: Unit[];
-  total: number;
   page: number;
   pageSize: number;
+  total: number;
   totalPages: number;
 };
