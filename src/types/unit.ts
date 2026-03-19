@@ -6,6 +6,7 @@ export type UnitLocation = {
   state: string;
   city: string;
   active: boolean;
+  isBase: boolean;
   createdAt: string;
   updatedAt: string;
 };

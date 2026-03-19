@@ -26,7 +26,7 @@ export function buildUnitCoordinatorsColumns(
         {
             accessorKey: "city",
             header: "Cidade",
-            cell: ({ row }) => row.original.city || "—",
+            cell: ({ row }) => (row.original.city + " - " + row.original.state) || "—",
         },
         {
             id: "actions",

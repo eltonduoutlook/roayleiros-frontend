@@ -24,6 +24,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { FullScreenLoader } from "../common/FullScreenLoader";
+import { Badge } from "../ui/badge";
 
 type UnitEditModalProps = {
     open: boolean;
@@ -53,6 +54,7 @@ type LocationRow = {
     state: string;
     city: string;
     active: boolean;
+    isBase: boolean;
 };
 
 function normalizeText(value: string) {
@@ -168,6 +170,16 @@ function dedupeLocationsByPlace(items: Unit["locations"] = []) {
             continue;
         }
 
+        if (item.isBase && !existing.isBase) {
+            map.set(key, item);
+            continue;
+        }
+
+        if (item.active && !existing.active) {
+            map.set(key, item);
+            continue;
+        }
+
         const existingDate = new Date(existing.updatedAt).getTime();
         const currentDate = new Date(item.updatedAt).getTime();
 
@@ -242,6 +254,8 @@ export function UnitEditModal({
 
     const showActionOverlay =
         savingBase || savingLocation || savingCoordinatorAction;
+
+
 
     async function loadUnit() {
         if (!open || !unitId) return;
@@ -347,6 +361,7 @@ export function UnitEditModal({
             state: item.state ?? "",
             city: item.city ?? "",
             active: item.active,
+            isBase: item.isBase,
         }));
     }, [unit?.locations]);
 
@@ -356,7 +371,9 @@ export function UnitEditModal({
     }, [unit?.coordinators]);
 
     const locationTableKey = useMemo(
-        () => allLocationRows.map((item) => `${item.id}:${item.active}`).join("|"),
+        () => allLocationRows
+            .map((item) => `${item.id}:${item.active}:${item.isBase}`)
+            .join("|"),
         [allLocationRows],
     );
 
@@ -513,6 +530,51 @@ export function UnitEditModal({
         }
     }
 
+    async function handleSetBaseLocation(locationId: string) {
+        if (!unit) return;
+
+        try {
+            setSavingLocation(true);
+            setError(null);
+
+            const response = await unitService.setBaseLocation(unit.id, locationId);
+
+            setUnit((prev) => {
+                if (!prev) return prev;
+
+                const updatedLocations = (prev.locations ?? [])
+                    .map((item) => ({
+                        ...item,
+                        isBase: item.id === response.item.id,
+                    }))
+                    .sort((a, b) => {
+                        if (a.isBase && !b.isBase) return -1;
+                        if (!a.isBase && b.isBase) return 1;
+
+                        const byState = (a.state ?? "").localeCompare(b.state ?? "", "pt-BR");
+                        if (byState !== 0) return byState;
+
+                        return (a.city ?? "").localeCompare(b.city ?? "", "pt-BR");
+                    });
+
+                return {
+                    ...prev,
+                    locations: updatedLocations,
+                };
+            });
+
+            await onSaved?.();
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Não foi possível definir a cidade base.",
+            );
+        } finally {
+            setSavingLocation(false);
+        }
+    }
+
     function syncCoordinatorStatesFromList(items: UnitCoordinatorItem[]) {
         const deduped = dedupeCoordinatorsByUser(items);
         const activeItems = deduped.filter((item) => item.active);
@@ -655,7 +717,7 @@ export function UnitEditModal({
     const locationColumns: ColumnDef<LocationRow>[] = [
         {
             id: "location",
-            header: "Cidade",
+            header: "Cidades",
             cell: ({ row }) => (
                 <div className="flex flex-col">
                     <span className="font-medium text-slate-800">
@@ -666,6 +728,20 @@ export function UnitEditModal({
                     </span>
                 </div>
             ),
+        },
+        {
+            id: "type",
+            header: "Tipo",
+            cell: ({ row }) =>
+                row.original.isBase ? (
+                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                        Base
+                    </Badge>
+                ) : (
+                    <Badge variant="secondary">
+                        Afiliada
+                    </Badge>
+                ),
         },
         {
             accessorKey: "active",
@@ -684,35 +760,49 @@ export function UnitEditModal({
             header: "Ação",
             cell: ({ row }) => {
                 const item = row.original;
-                const isActive = item.active;
 
                 return (
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className={`h-8 gap-2 ${isActive
-                            ? "border-green-300 text-green-600 hover:bg-green-50"
-                            : "border-red-300 text-red-600 hover:bg-red-50"
-                            }`}
-                        onClick={() =>
-                            isActive
-                                ? void handleDeactivateLocation(item.id)
-                                : void handleReactivateLocation(item)
-                        }
-                        disabled={savingLocation}
-                    >
-                        {isActive ? (
-                            <>
+                    <div className="flex flex-wrap gap-2">
+                        {item.active && !item.isBase ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-8 gap-2 border-green-300 text-green-600 hover:bg-green-50"
+                                onClick={() => void handleDeactivateLocation(item.id)}
+                                disabled={savingLocation}
+                            >
                                 <Pause className="h-4 w-4" />
                                 Desativar
-                            </>
-                        ) : (
-                            <>
+                            </Button>
+                        ) : null}
+
+                        {!item.active ? (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-8 gap-2 border-red-300 text-red-600 hover:bg-red-50"
+                                onClick={() => void handleReactivateLocation(item)}
+                                disabled={savingLocation}
+                            >
                                 <Play className="h-4 w-4" />
                                 Ativar
-                            </>
-                        )}
-                    </Button>
+                            </Button>
+                        ) : null}
+
+                        {item.active && !item.isBase ? (
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-8 gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+                                onClick={() => void handleSetBaseLocation(item.id)}
+                                disabled={savingLocation}
+                                title="Tornar unidade base"
+                            >
+                                Tornar unidade base
+                            </Button>
+                        ) : null}
+                    </div>
                 );
             },
         },

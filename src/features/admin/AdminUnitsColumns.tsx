@@ -39,7 +39,12 @@ export function buildAdminUnitsColumns({
         },
         {
             accessorKey: "city",
-            header: "Cidade",
+            header: "Cidade Base",
+            cell: ({ row }) => (
+                <div className="font-medium text-slate-900">
+                    {row.original.city ? `${row.original.city} - ${row.original.state}` : "—"}
+                </div>
+            ),
         },
         {
             accessorKey: "locationsCount",

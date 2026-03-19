@@ -179,17 +179,16 @@ export default function AdminUnitsPage() {
     const rows = useMemo<AdminUnitRow[]>(() => {
         return items.map((unit) => {
             const activeLocations = (unit.locations ?? []).filter((item) => item.active);
-            const firstLocation = activeLocations[0];
+            const baseLocation = activeLocations.find((item) => item.isBase);
 
             return {
                 id: unit.id,
                 name: unit.name,
                 active: unit.active,
-                state: firstLocation?.state ?? "-",
-                city: firstLocation?.city ?? "-",
+                state: baseLocation?.state ?? "-",
+                city: baseLocation?.city ?? "-",
                 locationsCount: activeLocations.length,
-                coordinatorsCount: (unit.coordinators ?? []).filter((item) => item.active)
-                    .length,
+                coordinatorsCount: (unit.coordinators ?? []).filter((item) => item.active).length,
                 updatedAt: unit.updatedAt,
             };
         });
@@ -312,7 +311,7 @@ export default function AdminUnitsPage() {
                         <div className="flex flex-wrap items-center gap-2">
                             <Button
                                 type="button"
-                                onClick={() => navigate("/admin/unidades/nova")}
+                                onClick={() => navigate("/admin/units/nova")}
                                 className="gap-2"
                             >
                                 <Plus className="h-4 w-4" />

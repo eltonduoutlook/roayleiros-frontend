@@ -56,7 +56,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "admin/unidades/nova",
+        path: "admin/units/nova",
         element: (
           <RoleRoute allowedLevels={["ADMIN", "COORDINATOR"]}>
             <AdminUnitCreatePage />
@@ -64,7 +64,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "admin/unidades",
+        path: "admin/units",
         element: (
           <RoleRoute allowedLevels={["ADMIN", "COORDINATOR"]}>
             <AdminUnitsPage />

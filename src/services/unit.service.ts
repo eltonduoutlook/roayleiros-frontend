@@ -45,6 +45,11 @@ type RemoveUnitLocationResponse = {
     item: UnitLocation;
 };
 
+type SetBaseUnitLocationResponse = {
+    message: string;
+    item: UnitLocation;
+};
+
 type UnitCoordinatorResponse = {
     message: string;
     item: UnitCoordinatorItem;
@@ -150,6 +155,15 @@ export const unitService = {
     ): Promise<RemoveUnitLocationResponse> {
         return api.patch<RemoveUnitLocationResponse>(
             `/admin/units/${unitId}/locations/${locationId}/inactivate`,
+        );
+    },
+
+    async setBaseLocation(
+        unitId: string,
+        locationId: string,
+    ): Promise<SetBaseUnitLocationResponse> {
+        return api.patch<SetBaseUnitLocationResponse>(
+            `/admin/units/${unitId}/locations/${locationId}/base`,
         );
     },
 };

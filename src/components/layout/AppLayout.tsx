@@ -33,7 +33,7 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="border-b bg-white">
+      <header className="border-b bg-white md:sticky md:top-0 md:z-50 md:shadow-sm">
         <div className="mx-auto px-4 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ export function AppLayout() {
             )}
           </div>
         </div>
-      </div>
+      </header>
 
       <main className="mx-auto px-4 py-8">
         <Outlet />

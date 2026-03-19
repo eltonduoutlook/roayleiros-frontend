@@ -79,7 +79,7 @@ export function buildRegisterRequestsColumns({
         {
             accessorKey: "city",
             header: "Cidade",
-            cell: ({ row }) => row.original.city || "—",
+            cell: ({ row }) => row.original.city + " - " + row.original.state || "—",
         },
         {
             accessorKey: "phone",
@@ -114,7 +114,7 @@ export function buildRegisterRequestsColumns({
                     title="Tipo de usuário selecionado no momento da aprovação!"
                     className="flex flex-wrap gap-2">
                     {row.original.approvedLevel ? (
-                        <Badge variant="outline">
+                        <Badge className="w-full py-3" variant="outline">
                             {row.original.approvedLevel}
                         </Badge>
                     ) : null}
