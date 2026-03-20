@@ -1,19 +1,41 @@
 import { useMemo, useState } from "react";
-import { CheckCircle2, Clock3, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
+import type { PaginationState } from "@tanstack/react-table";
+import {
+    CheckCircle2,
+    Clock3,
+    RefreshCw,
+    Search,
+    ShieldCheck,
+    XCircle,
+} from "lucide-react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { adminService } from "@/services/admin.service";
 import { useAsyncData } from "@/hooks/useAsyncData";
 import { FullScreenLoader } from "@/components/common/FullScreenLoader";
-
 import { DataTable } from "@/components/common/DataTable";
 import { StatCard } from "@/components/common/StatCard";
 import { DashboardStatsGrid } from "@/components/common/DashboardStatsGrid";
 import { RegisterRequestEditModal } from "@/features/admin/RegisterRequestEditModal";
-import { buildRegisterRequestsColumns, RegisterRequestRow } from "@/features/admin/RegisterRequestsColumns";
-import type { UserLevel } from "@/services/admin.service";
+import {
+    buildRegisterRequestsColumns,
+    RegisterRequestRow,
+} from "@/features/admin/RegisterRequestsColumns";
+import type {
+    PaginatedRegisterRequestsResponse,
+    RegisterRequestFilters,
+    UserLevel,
+} from "@/services/admin.service";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 type AuthUser = {
     id: string;
@@ -25,8 +47,36 @@ type AuthUser = {
     level: UserLevel;
 };
 
+const emptyFilters: RegisterRequestFilters = {
+    name: "",
+    state: "",
+    city: "",
+    phone: "",
+    status: "",
+    createdFrom: "",
+    createdTo: "",
+};
+
+const emptyResponse: PaginatedRegisterRequestsResponse = {
+    data: [],
+    meta: {
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        totalPages: 1,
+    },
+};
+
 export default function AdminRegisterRequestsPage() {
     const [selectedRequest, setSelectedRequest] = useState<RegisterRequestRow | null>(null);
+    const [filters, setFilters] = useState<RegisterRequestFilters>(emptyFilters);
+    const [appliedFilters, setAppliedFilters] =
+        useState<RegisterRequestFilters>(emptyFilters);
+
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageIndex: 0,
+        pageSize: 10,
+    });
 
     const currentUserLevel = useMemo<UserLevel>(() => {
         const storedUser = localStorage.getItem("auth:user");
@@ -43,29 +93,37 @@ export default function AdminRegisterRequestsPage() {
         }
     }, []);
 
-    const {
-        data,
-        loading,
-        error,
-        reload,
-    } = useAsyncData(() => adminService.getRegisterRequests(), [], []);
+    const { data, loading, error, reload } =
+        useAsyncData<PaginatedRegisterRequestsResponse>(
+            () =>
+                adminService.getRegisterRequests({
+                    ...appliedFilters,
+                    page: pagination.pageIndex + 1,
+                    pageSize: pagination.pageSize,
+                }),
+            emptyResponse,
+            [appliedFilters, pagination.pageIndex, pagination.pageSize]
+        );
+
+    const rows = data.data;
+    const meta = data.meta;
 
     const summary = useMemo(() => {
         const counts = {
-            total: data.length,
+            total: meta.total,
             pending: 0,
             approved: 0,
             rejected: 0,
         };
 
-        for (const item of data) {
+        for (const item of rows) {
             if (item.status === "PENDING") counts.pending += 1;
             if (item.status === "APPROVED") counts.approved += 1;
             if (item.status === "REJECTED") counts.rejected += 1;
         }
 
         return counts;
-    }, [data]);
+    }, [rows, meta.total]);
 
     const columns = useMemo(
         () =>
@@ -76,6 +134,30 @@ export default function AdminRegisterRequestsPage() {
             }),
         [],
     );
+
+    const handleChange = (key: keyof RegisterRequestFilters, value: string) => {
+        setFilters((prev) => ({
+            ...prev,
+            [key]: value,
+        }));
+    };
+
+    const handleClearFilters = () => {
+        setFilters(emptyFilters);
+        setAppliedFilters(emptyFilters);
+        setPagination((prev) => ({
+            ...prev,
+            pageIndex: 0,
+        }));
+    };
+
+    const handleApplyFilters = () => {
+        setAppliedFilters(filters);
+        setPagination((prev) => ({
+            ...prev,
+            pageIndex: 0,
+        }));
+    };
 
     if (loading) {
         return <FullScreenLoader text="Carregando solicitações de cadastro..." />;
@@ -119,7 +201,106 @@ export default function AdminRegisterRequestsPage() {
             </DashboardStatsGrid>
 
             <Card>
-                <CardContent className="space-y-4 p-4 md:p-6">
+                <CardContent className="space-y-6 p-4 md:p-6">
+                    <div className="space-y-4 rounded-2xl border bg-background p-4">
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Nome</label>
+                                <Input
+                                    placeholder="Buscar por nome"
+                                    value={filters.name}
+                                    onChange={(e) => handleChange("name", e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Estado</label>
+                                <Input
+                                    placeholder="Digite o estado"
+                                    value={filters.state}
+                                    onChange={(e) => handleChange("state", e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Cidade</label>
+                                <Input
+                                    placeholder="Digite a cidade"
+                                    value={filters.city}
+                                    onChange={(e) => handleChange("city", e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Telefone</label>
+                                <Input
+                                    placeholder="Digite o telefone"
+                                    value={filters.phone}
+                                    onChange={(e) => handleChange("phone", e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Status</label>
+                                <Select
+                                    value={filters.status || "__all__"}
+                                    onValueChange={(value) =>
+                                        handleChange("status", value === "__all__" ? "" : value)
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione o status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__all__">Todos</SelectItem>
+                                        <SelectItem value="PENDING">Pendente</SelectItem>
+                                        <SelectItem value="APPROVED">Aprovado</SelectItem>
+                                        <SelectItem value="REJECTED">Rejeitado</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Criado de</label>
+                                <Input
+                                    type="date"
+                                    value={filters.createdFrom}
+                                    onChange={(e) => handleChange("createdFrom", e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Criado até</label>
+                                <Input
+                                    type="date"
+                                    value={filters.createdTo}
+                                    onChange={(e) => handleChange("createdTo", e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleClearFilters}
+                            >
+                                Limpar
+                            </Button>
+
+                            <Button
+                                type="button"
+                                className="gap-2"
+                                onClick={handleApplyFilters}
+                            >
+                                <Search className="h-4 w-4" />
+                                Filtrar
+                            </Button>
+                        </div>
+                    </div>
+
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <h2 className="text-lg font-semibold">Lista de solicitações</h2>
@@ -146,10 +327,18 @@ export default function AdminRegisterRequestsPage() {
                     ) : (
                         <DataTable
                             columns={columns}
-                            data={data}
+                            data={rows}
                             emptyMessage="Nenhuma solicitação encontrada."
+                            manualPagination
+                            pageCount={meta.totalPages}
+                            rowCount={meta.total}
+                            pagination={pagination}
+                            onPaginationChange={setPagination}
+                            pageSizeOptions={[10, 20, 50]}
                             onRowClick={(row) => {
-                                const canEdit = row.status === "PENDING" || row.status === "REJECTED";
+                                const canEdit =
+                                    row.status === "PENDING" || row.status === "REJECTED";
+
                                 if (!canEdit) return;
 
                                 setSelectedRequest(row);
