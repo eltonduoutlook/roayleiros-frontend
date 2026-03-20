@@ -25,6 +25,9 @@ import {
 } from "@/components/ui/select";
 import { FullScreenLoader } from "../common/FullScreenLoader";
 import { Badge } from "../ui/badge";
+import { StatusBadge } from "../common/status/StatusBadge";
+import { StatusBooleanBadge } from "../common/status/BooleanStatusBadge";
+import { registerRequestStatusConfig } from "../common/status/statusConfigs";
 
 type UnitEditModalProps = {
     open: boolean;
@@ -747,12 +750,7 @@ export function UnitEditModal({
             accessorKey: "active",
             header: "Status",
             cell: ({ row }) => (
-                <span
-                    className={`text-xs font-medium ${row.original.active ? "text-green-600" : "text-red-600"
-                        }`}
-                >
-                    {row.original.active ? "Ativa" : "Inativa"}
-                </span>
+                <StatusBooleanBadge value={row.original.active} />
             ),
         },
         {
@@ -833,12 +831,7 @@ export function UnitEditModal({
             accessorKey: "active",
             header: "Status",
             cell: ({ row }) => (
-                <span
-                    className={`text-xs font-medium ${row.original.active ? "text-green-600" : "text-red-600"
-                        }`}
-                >
-                    {row.original.active ? "Ativo" : "Inativo"}
-                </span>
+                <StatusBooleanBadge value={row.original.active} />
             ),
         },
         {

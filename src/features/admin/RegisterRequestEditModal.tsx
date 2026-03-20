@@ -20,14 +20,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {
-    adminService,
-    type RegisterRequestStatus,
-    type UserLevel,
-} from "@/services/admin.service";
 import type { RegisterRequestRow } from "@/features/admin/RegisterRequestsColumns";
 import { formatPhone } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { RegisterRequestStatus, UserLevel } from "@/types/admin";
+import { adminService } from "@/services/admin.service";
 
 type Props = {
     open: boolean;
@@ -128,8 +125,7 @@ export function RegisterRequestEditModal({
     const isBusy = savingApprove || savingReject;
 
     const canApprove = !!request && !isBusy && !isApproved;
-    const canReject = !!request && !isBusy && !isApproved;
-
+    
     function updateField<K extends keyof FormState>(field: K, value: FormState[K]) {
         setForm((prev) => ({ ...prev, [field]: value }));
     }
@@ -349,7 +345,7 @@ export function RegisterRequestEditModal({
                                     type="button"
                                     variant="destructive"
                                     onClick={handleReject}
-                                    disabled={!canReject}
+                                    disabled={isRejected}
                                 >
                                     {savingReject ? (
                                         <>
@@ -377,7 +373,7 @@ export function RegisterRequestEditModal({
                                     ) : (
                                         <>
                                             <CheckCircle2 className="mr-2 h-4 w-4" />
-                                            {isRejected ? "Aprovar" : "Aprovar"}
+                                            Aprovar
                                         </>
                                     )}
                                 </Button>

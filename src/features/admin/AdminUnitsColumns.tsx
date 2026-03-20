@@ -1,5 +1,10 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { formatDateBR } from "@/lib/date";
+import { StatusBadge } from "@/components/common/status/StatusBadge";
+import { StatusBooleanBadge } from "@/components/common/status/BooleanStatusBadge";
+
 
 export type AdminUnitRow = {
     id: string;
@@ -16,12 +21,6 @@ type BuildAdminUnitsColumnsParams = {
     onEdit: (unitId: string) => void;
 };
 
-function formatDate(value: string) {
-    if (!value) return "-";
-
-    return new Date(value).toLocaleString("pt-BR");
-}
-
 export function buildAdminUnitsColumns({
     onEdit,
 }: BuildAdminUnitsColumnsParams): ColumnDef<AdminUnitRow>[] {
@@ -32,10 +31,6 @@ export function buildAdminUnitsColumns({
             cell: ({ row }) => (
                 <div className="font-medium text-slate-900">{row.original.name}</div>
             ),
-        },
-        {
-            accessorKey: "state",
-            header: "Estado",
         },
         {
             accessorKey: "city",
@@ -55,14 +50,16 @@ export function buildAdminUnitsColumns({
             header: "Coordenadores",
         },
         {
-            accessorKey: "active",
-            header: "Status",
-            cell: ({ row }) => (row.original.active ? "Ativa" : "Inativa"),
-        },
-        {
             accessorKey: "updatedAt",
             header: "Atualizado em",
-            cell: ({ row }) => formatDate(row.original.updatedAt),
+            cell: ({ row }) => formatDateBR(row.original.updatedAt),
+        },
+        {
+            accessorKey: "status",
+            header: "Status",
+            cell: ({ row }) => (
+                <StatusBooleanBadge value={row.original.active} />
+            ),
         },
         {
             id: "actions",

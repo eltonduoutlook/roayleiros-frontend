@@ -1,10 +1,12 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, Clock3, Pencil, XCircle } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { AdminRegisterRequestItem } from "@/services/admin.service";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatPhone } from "@/lib/utils";
+import { registerRequestStatusConfig } from "@/components/common/status/statusConfigs";
+import { StatusBadge } from "@/components/common/status/StatusBadge";
+import { AdminRegisterRequestItem } from "@/types/admin";
 
 export type RegisterRequestRow = AdminRegisterRequestItem;
 
@@ -15,44 +17,6 @@ function formatDateTimeBR(value: string | null) {
         dateStyle: "short",
         timeStyle: "short",
     });
-}
-
-function getStatusBadge(status: string) {
-    switch (status) {
-        case "PENDING":
-            return (
-                <Badge
-                    variant="outline"
-                    className="gap-1 border-yellow-300 text-yellow-700 bg-yellow-50"
-                >
-                    <Clock3 className="h-3.5 w-3.5" />
-                    Pendente
-                </Badge>
-            );
-
-        case "APPROVED":
-            return (
-                <Badge
-                    className="gap-1 bg-green-600 text-white hover:bg-green-600"
-                >
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Aprovado
-                </Badge>
-            );
-
-        case "REJECTED":
-            return (
-                <Badge
-                    className="gap-1 bg-red-600 text-white hover:bg-red-600"
-                >
-                    <XCircle className="h-3.5 w-3.5" />
-                    Rejeitado
-                </Badge>
-            );
-
-        default:
-            return <Badge variant="outline">{status}</Badge>;
-    }
 }
 
 type BuildColumnsParams = {
@@ -90,9 +54,10 @@ export function buildRegisterRequestsColumns({
             accessorKey: "status",
             header: "Status",
             cell: ({ row }) => (
-                <div className="flex flex-wrap gap-2">
-                    {getStatusBadge(row.original.status)}
-                </div>
+                <StatusBadge
+                    status={row.original.status}
+                    config={registerRequestStatusConfig}
+                />
             ),
         },
         {

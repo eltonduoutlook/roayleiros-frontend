@@ -1,4 +1,5 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/common/status/StatusBadge";
+import { registerRequestStatusConfig } from "@/components/common/status/statusConfigs";
 import { Button } from "@/components/ui/button";
 import type { Unit } from "@/types/unit";
 
@@ -7,14 +8,6 @@ export type UnitRow = Unit;
 type BuildUnitsColumnsParams = {
     onView: (row: UnitRow) => void;
 };
-
-function getStatusLabel(active: boolean) {
-    return active ? "Ativa" : "Inativa";
-}
-
-function getStatusVariant(active: boolean) {
-    return active ? "default" : "secondary";
-}
 
 export function buildUnitsColumns({
     onView,
@@ -38,9 +31,10 @@ export function buildUnitsColumns({
             accessorKey: "active",
             header: "Status",
             cell: ({ row }: any) => (
-                <Badge variant={getStatusVariant(row.original.active)}>
-                    {getStatusLabel(row.original.active)}
-                </Badge>
+                <StatusBadge
+                    status={row.original.active}
+                    config={registerRequestStatusConfig}
+                />
             ),
         },
         {

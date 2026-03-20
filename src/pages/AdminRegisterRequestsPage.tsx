@@ -24,11 +24,6 @@ import {
     buildRegisterRequestsColumns,
     RegisterRequestRow,
 } from "@/features/admin/RegisterRequestsColumns";
-import type {
-    PaginatedRegisterRequestsResponse,
-    RegisterRequestFilters,
-    UserLevel,
-} from "@/services/admin.service";
 import {
     Select,
     SelectContent,
@@ -36,6 +31,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { PaginatedRegisterRequestsResponse, RegisterRequestFilters, UserLevel } from "@/types/admin";
 
 type AuthUser = {
     id: string;
