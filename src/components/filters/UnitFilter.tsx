@@ -1,7 +1,11 @@
-import type { Unit } from "@/types/unit";
+type UnitFilterItem = {
+  id: string;
+  name: string;
+  city?: string | null;
+};
 
 type UnitFilterProps = {
-  units: Unit[];
+  units: UnitFilterItem[];
   value: string;
   onChange: (value: string) => void;
 };
