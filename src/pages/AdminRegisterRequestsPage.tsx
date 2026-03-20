@@ -20,10 +20,7 @@ import { DataTable } from "@/components/common/DataTable";
 import { StatCard } from "@/components/common/StatCard";
 import { DashboardStatsGrid } from "@/components/common/DashboardStatsGrid";
 import { RegisterRequestEditModal } from "@/features/admin/RegisterRequestEditModal";
-import {
-    buildRegisterRequestsColumns,
-    RegisterRequestRow,
-} from "@/features/admin/RegisterRequestsColumns";
+
 import {
     Select,
     SelectContent,
@@ -31,7 +28,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { PaginatedRegisterRequestsResponse, RegisterRequestFilters, UserLevel } from "@/types/admin";
+import { PaginatedRegisterRequestsResponse, RegisterRequestFilters, RegisterRequestRow, UserLevel } from "@/types/admin";
+import { buildRegisterRequestsColumns } from "@/features/admin/RegisterRequestsColumns";
 
 type AuthUser = {
     id: string;

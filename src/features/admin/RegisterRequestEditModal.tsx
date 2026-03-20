@@ -20,10 +20,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import type { RegisterRequestRow } from "@/features/admin/RegisterRequestsColumns";
+
 import { formatPhone } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { RegisterRequestStatus, UserLevel } from "@/types/admin";
+import { RegisterRequestRow, RegisterRequestStatus, UserLevel } from "@/types/admin";
 import { adminService } from "@/services/admin.service";
 
 type Props = {
